@@ -28,7 +28,7 @@ export const addUserToProject = (projectId: string, userId: string) => {
   });
 };
 
-export const getProject = (projectId: string) => {
+export const getProjectById = (projectId: string) => {
   return prisma.project.findUnique({
     where: { id: projectId },
     include: {
@@ -50,6 +50,26 @@ export const getProject = (projectId: string) => {
           },
         },
         orderBy: { date: "desc" },
+      },
+    },
+  });
+};
+
+export const getListOfProjects = () => {
+  return prisma.project.findMany({
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      users: {
+        select: {
+          id: true,
+          name: true,
+        },
       },
     },
   });

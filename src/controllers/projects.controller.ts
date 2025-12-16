@@ -36,19 +36,32 @@ export const addUserToProject = async (
   }
 };
 
-export const getProject = async (
+export const getProjectById = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const project = await projectService.getProject(req.params.projectId);
+    const project = await projectService.getProjectById(req.params.projectId);
 
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
 
     res.json(project);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getListOfProjects = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const projects = await projectService.getListOfProjects();
+    res.json(projects);
   } catch (err) {
     next(err);
   }

@@ -2,7 +2,8 @@ import { Router } from "express";
 import {
   createProject,
   addUserToProject,
-  getProject,
+  getProjectById,
+  getListOfProjects,
 } from "../controllers/projects.controller";
 import { validate } from "../middlewares/validate";
 import {
@@ -12,6 +13,10 @@ import {
 
 const router = Router();
 
+router.get("/", getListOfProjects);
+
+router.get("/:projectId", getProjectById);
+
 router.post("/", validate(createProjectSchema), createProject);
 
 router.post(
@@ -19,7 +24,5 @@ router.post(
   validate(addUserToProjectSchema),
   addUserToProject
 );
-
-router.get("/:projectId", getProject);
 
 export default router;
