@@ -10,17 +10,19 @@ import {
   createProjectSchema,
   addUserToProjectSchema,
 } from "../schemas/projects.schema";
+import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
 
-router.get("/", getListOfProjects);
+router.get("/", requireAuth, getListOfProjects);
 
-router.get("/:projectId", getProjectById);
+router.get("/:projectId", requireAuth, getProjectById);
 
-router.post("/", validate(createProjectSchema), createProject);
+router.post("/", requireAuth, validate(createProjectSchema), createProject);
 
 router.post(
   "/:projectId/users",
+  requireAuth,
   validate(addUserToProjectSchema),
   addUserToProject
 );

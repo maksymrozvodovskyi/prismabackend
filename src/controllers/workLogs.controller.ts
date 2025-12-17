@@ -1,16 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import * as workLogService from "../services/workLogs.service";
 import { CreateWorkLogDto } from "../schemas/workLogs.schema";
+import { AuthRequest } from "../middlewares/auth";
 
 export const createWorkLog = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const workLog = await workLogService.createWorkLog(
-      req.body as CreateWorkLogDto
-    );
+    const workLog = await workLogService.createWorkLog(req.user!.id, req.body);
     res.status(201).json(workLog);
   } catch (err) {
     next(err);
@@ -18,12 +17,13 @@ export const createWorkLog = async (
 };
 
 export const getWorkLogsByProject = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const logs = await workLogService.getWorkLogsByProject(
+      req.user!.id,
       req.params.projectId
     );
     res.json(logs);
@@ -33,12 +33,15 @@ export const getWorkLogsByProject = async (
 };
 
 export const getWorkLogsByUser = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const logs = await workLogService.getWorkLogsByUser(req.params.userId);
+    const logs = await workLogService.getWorkLogsByUser(
+      req.user!.id,
+      req.params.userId
+    );
     res.json(logs);
   } catch (err) {
     next(err);

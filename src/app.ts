@@ -3,6 +3,7 @@ import cors from "cors";
 import { errorHandler } from "./middlewares/errorHandler";
 import { notFoundHandler } from "./middlewares/notFoundHandler";
 
+import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/users.routes";
 import projectRoutes from "./routes/projects.routes";
 import workLogRoutes from "./routes/workLogs.routes";
@@ -12,6 +13,7 @@ export const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/projects", projectRoutes);
 app.use("/work-logs", workLogRoutes);
