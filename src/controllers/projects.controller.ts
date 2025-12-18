@@ -4,15 +4,17 @@ import {
   CreateProjectDto,
   AddUserToProjectDto,
 } from "../schemas/projects.schema";
+import { AuthRequest } from "../middlewares/auth";
 
 export const createProject = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const project = await projectService.createProject(
-      req.body as CreateProjectDto
+      req.body as CreateProjectDto,
+      req.userId!
     );
     res.status(201).json(project);
   } catch (err) {
@@ -21,7 +23,7 @@ export const createProject = async (
 };
 
 export const addUserToProject = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -37,12 +39,15 @@ export const addUserToProject = async (
 };
 
 export const getProjectById = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const project = await projectService.getProjectById(req.params.projectId);
+    const project = await projectService.getProjectById(
+      req.params.projectId,
+      req.userId!
+    );
 
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
@@ -55,12 +60,12 @@ export const getProjectById = async (
 };
 
 export const getListOfProjects = async (
-  _req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const projects = await projectService.getListOfProjects();
+    const projects = await projectService.getListOfProjects(req.userId!);
     res.json(projects);
   } catch (err) {
     next(err);

@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import * as userService from "../services/users.service";
 import { CreateUserDto } from "../schemas/user.schema";
+import { AuthRequest } from "../middlewares/auth";
 
 export const createUser = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -16,7 +17,7 @@ export const createUser = async (
 };
 
 export const getUsers = async (
-  _req: Request,
+  _req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {

@@ -9,7 +9,9 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
-    const result = await authService.login(req.body as LoginDto);
+    const { email, password } = req.body as LoginDto;
+
+    const result = await authService.login(email, password);
 
     res.json(result);
   } catch (err) {
@@ -18,13 +20,7 @@ export const login = async (
 };
 
 export const me = async (req: AuthRequest, res: Response) => {
-  const user = await authService.getMe(req.user!.id);
+  const user = await authService.getMe(req.userId!);
 
   res.json({ user });
-};
-
-export const logout = async (req: AuthRequest, res: Response) => {
-  await authService.logout(req.token!);
-
-  res.json({ message: "Logged out" });
 };

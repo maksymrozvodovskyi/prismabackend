@@ -1,33 +1,22 @@
 import { prisma } from "../prisma";
 import bcrypt from "bcrypt";
-import { randomBytes } from "crypto";
-import { LoginDto } from "../schemas/auth.scema";
+import { getToken } from "../utils/jwt";
 
-const ACCESS_TOKEN_TTL = 1000 * 60 * 60;
-
-export const login = async ({ email, password }: LoginDto) => {
+export const login = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
+
   if (!user) {
     throw new Error("Invalid credentials");
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
+  const isValid = await bcrypt.compare(password, user.password);
+  if (!isValid) {
     throw new Error("Invalid credentials");
   }
 
-  await prisma.session.deleteMany({
-    where: { userId: user.id },
-  });
-
-  const accessToken = randomBytes(30).toString("base64");
-
-  await prisma.session.create({
-    data: {
-      userId: user.id,
-      accessToken,
-      expiresAt: new Date(Date.now() + ACCESS_TOKEN_TTL),
-    },
+  const accessToken = getToken({
+    id: user.id,
+    email: user.email,
   });
 
   return {
@@ -39,12 +28,6 @@ export const login = async ({ email, password }: LoginDto) => {
       role: user.role,
     },
   };
-};
-
-export const logout = async (accessToken: string) => {
-  await prisma.session.deleteMany({
-    where: { accessToken },
-  });
 };
 
 export const getMe = async (userId: string) => {

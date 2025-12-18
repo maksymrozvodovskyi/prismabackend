@@ -9,7 +9,8 @@ export const createWorkLog = async (
   next: NextFunction
 ) => {
   try {
-    const workLog = await workLogService.createWorkLog(req.user!.id, req.body);
+    const workLog = await workLogService.createWorkLog(req.userId!, req.body);
+
     res.status(201).json(workLog);
   } catch (err) {
     next(err);
@@ -23,7 +24,7 @@ export const getWorkLogsByProject = async (
 ) => {
   try {
     const logs = await workLogService.getWorkLogsByProject(
-      req.user!.id,
+      req.userId!,
       req.params.projectId
     );
     res.json(logs);
@@ -39,7 +40,7 @@ export const getWorkLogsByUser = async (
 ) => {
   try {
     const logs = await workLogService.getWorkLogsByUser(
-      req.user!.id,
+      req.userId!,
       req.params.userId
     );
     res.json(logs);

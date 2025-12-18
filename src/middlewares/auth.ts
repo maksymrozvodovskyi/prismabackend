@@ -1,39 +1,38 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../prisma";
+import jwt from "jsonwebtoken";
+import { verifyToken } from "../utils/jwt";
 
 export interface AuthRequest extends Request {
-  user?: { id: string; role: string };
-  token?: string;
+  userId?: string;
 }
+
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const requireAuth = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const header = req.headers.authorization;
+  const authHeader = req.get("authorization");
 
-  if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized" });
+  if (!authHeader) {
+    return res.status(401).json({ message: "Not authorized" });
   }
 
-  const token = header.split(" ")[1];
+  const [, token] = authHeader.split(" ");
 
-  const session = await prisma.session.findUnique({
-    where: { accessToken: token },
-    include: { user: true },
-  });
-
-  if (!session) return res.status(401).json({ error: "Invalid token" });
-
-  if (session.expiresAt < new Date()) {
-    await prisma.session.delete({ where: { id: session.id } });
-
-    return res.status(401).json({ error: "Token expired" });
+  if (!token) {
+    return res.status(401).json({ message: "Not authorized" });
   }
 
-  req.user = { id: session.user.id, role: session.user.role };
-  req.token = token;
+  const payload = verifyToken(token);
+
+  if (!payload) {
+    return res.status(401).json({ message: "Not authorized" });
+  }
+
+  req.userId = payload.id;
 
   next();
 };
