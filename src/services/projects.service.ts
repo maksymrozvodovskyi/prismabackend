@@ -1,3 +1,4 @@
+import { Role } from "../../prisma/generated/prisma";
 import { prisma } from "../prisma";
 import { CreateProjectDto } from "../schemas/projects.schema";
 
@@ -44,11 +45,26 @@ export const getProjectById = (projectId: string, userId: string) => {
   });
 };
 
-export const getListOfProjects = (userId: string) => {
+export const getListOfProjects = (userId: string, userRole: Role) => {
+  if (userRole === Role.ADMIN) {
+    return prisma.project.findMany({
+      include: {
+        users: {
+          select: { id: true, email: true, name: true, role: true },
+        },
+      },
+    });
+  }
+
   return prisma.project.findMany({
     where: {
       users: {
         some: { id: userId },
+      },
+    },
+    include: {
+      users: {
+        select: { id: true, email: true, name: true, role: true },
       },
     },
   });

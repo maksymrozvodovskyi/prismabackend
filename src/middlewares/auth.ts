@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "../prisma";
-import jwt from "jsonwebtoken";
 import { verifyToken } from "../utils/jwt";
+import { Role } from "@prisma/client";
 
 export interface AuthRequest extends Request {
   userId?: string;
+  userRole?: Role;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -33,6 +33,7 @@ export const requireAuth = async (
   }
 
   req.userId = payload.id;
+  req.userRole = payload.role;
 
   next();
 };

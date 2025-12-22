@@ -11,18 +11,26 @@ import {
   addUserToProjectSchema,
 } from "../schemas/projects.schema";
 import { requireAuth } from "../middlewares/auth";
+import { roleChecker } from "../middlewares/roleChecker";
 
 const router = Router();
 
-router.get("/", requireAuth, getListOfProjects);
+router.get("/", requireAuth, getListOfProjects); // всі адмін
 
 router.get("/:projectId", requireAuth, getProjectById);
 
-router.post("/", requireAuth, validate(createProjectSchema), createProject);
+router.post(
+  "/",
+  requireAuth,
+  roleChecker,
+  validate(createProjectSchema),
+  createProject
+);
 
 router.post(
   "/:projectId/users",
   requireAuth,
+  roleChecker,
   validate(addUserToProjectSchema),
   addUserToProject
 );

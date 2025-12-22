@@ -9,7 +9,10 @@ export const createWorkLog = async (
   next: NextFunction
 ) => {
   try {
-    const workLog = await workLogService.createWorkLog(req.userId!, req.body);
+    const workLog = await workLogService.createWorkLog(
+      req.userId!,
+      req.body as CreateWorkLogDto
+    );
 
     res.status(201).json(workLog);
   } catch (err) {
@@ -41,9 +44,29 @@ export const getWorkLogsByUser = async (
   try {
     const logs = await workLogService.getWorkLogsByUser(
       req.userId!,
-      req.params.userId
+      req.params.userId,
+      req.userRole!
     );
+
     res.json(logs);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateWorkLog = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const updatedLog = await workLogService.updateWorkLog(
+      req.userId!,
+      req.params.workLogId,
+      req.body as Partial<CreateWorkLogDto>
+    );
+
+    res.json(updatedLog);
   } catch (err) {
     next(err);
   }

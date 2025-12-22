@@ -1,3 +1,4 @@
+import { Role } from "@prisma/client";
 import { prisma } from "../prisma";
 import { CreateWorkLogDto } from "../schemas/workLogs.schema";
 
@@ -59,9 +60,10 @@ export const getWorkLogsByProject = async (
 
 export const getWorkLogsByUser = async (
   requesterId: string,
-  userId: string
+  userId: string,
+  requesterRole: string
 ) => {
-  if (requesterId !== userId) {
+  if (requesterId !== userId && requesterRole !== "ADMIN") {
     throw new Error("Forbidden");
   }
 
@@ -77,5 +79,32 @@ export const getWorkLogsByUser = async (
       },
     },
     orderBy: { date: "desc" },
+  });
+};
+
+export const updateWorkLog = async (
+  userId: string,
+  workLogId: string,
+  data: Partial<CreateWorkLogDto>
+) => {
+  const workLog = await prisma.workLog.findUnique({
+    where: { id: workLogId },
+  });
+
+  if (!workLog) {
+    throw new Error("WorkLog not found");
+  }
+
+  if (workLog.userId !== userId) {
+    throw new Error("Forbidden: cannot update others' work logs");
+  }
+
+  return prisma.workLog.update({
+    where: { id: workLogId },
+    data: {
+      date: data.date ? new Date(data.date) : workLog.date,
+      hours: data.hours ?? workLog.hours,
+      activity: data.activity ?? workLog.activity,
+    },
   });
 };

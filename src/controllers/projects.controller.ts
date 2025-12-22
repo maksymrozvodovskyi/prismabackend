@@ -32,6 +32,7 @@ export const addUserToProject = async (
     const { userId } = req.body as AddUserToProjectDto;
 
     const project = await projectService.addUserToProject(projectId, userId);
+
     res.json(project);
   } catch (err) {
     next(err);
@@ -65,7 +66,10 @@ export const getListOfProjects = async (
   next: NextFunction
 ) => {
   try {
-    const projects = await projectService.getListOfProjects(req.userId!);
+    const projects = await projectService.getListOfProjects(
+      req.userId!,
+      req.userRole!
+    );
     res.json(projects);
   } catch (err) {
     next(err);
