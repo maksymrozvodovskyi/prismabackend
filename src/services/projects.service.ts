@@ -1,9 +1,14 @@
 import { prisma } from "../prisma";
 import { CreateProjectDto } from "../schemas/projects.schema";
 
-export const createProject = (data: CreateProjectDto) => {
+export const createProject = (data: CreateProjectDto, userId: string) => {
   return prisma.project.create({
-    data,
+    data: {
+      ...data,
+      users: {
+        connect: { id: userId },
+      },
+    },
   });
 };
 
@@ -28,28 +33,22 @@ export const addUserToProject = (projectId: string, userId: string) => {
   });
 };
 
-export const getProject = (projectId: string) => {
-  return prisma.project.findUnique({
-    where: { id: projectId },
-    include: {
+export const getProjectById = (projectId: string, userId: string) => {
+  return prisma.project.findFirst({
+    where: {
+      id: projectId,
       users: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-        },
+        some: { id: userId },
       },
-      workLogs: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-        orderBy: { date: "desc" },
+    },
+  });
+};
+
+export const getListOfProjects = (userId: string) => {
+  return prisma.project.findMany({
+    where: {
+      users: {
+        some: { id: userId },
       },
     },
   });
