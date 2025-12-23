@@ -45,23 +45,19 @@ export const getProjectById = (projectId: string, userId: string) => {
   });
 };
 
-export const getListOfProjects = (userId: string, userRole: Role) => {
-  if (userRole === Role.ADMIN) {
-    return prisma.project.findMany({
-      include: {
-        users: {
-          select: { id: true, email: true, name: true, role: true },
-        },
-      },
-    });
-  }
-
+export const getAllProjects = () => {
   return prisma.project.findMany({
-    where: {
+    include: {
       users: {
-        some: { id: userId },
+        select: { id: true, email: true, name: true, role: true },
       },
     },
+  });
+};
+
+export const getProjectsByUser = (userId: string) => {
+  return prisma.project.findMany({
+    where: { users: { some: { id: userId } } },
     include: {
       users: {
         select: { id: true, email: true, name: true, role: true },

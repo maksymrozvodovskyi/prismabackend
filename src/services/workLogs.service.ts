@@ -58,15 +58,7 @@ export const getWorkLogsByProject = async (
   });
 };
 
-export const getWorkLogsByUser = async (
-  requesterId: string,
-  userId: string,
-  requesterRole: string
-) => {
-  if (requesterId !== userId && requesterRole !== "ADMIN") {
-    throw new Error("Forbidden");
-  }
-
+export const getWorkLogsByUser = async (userId: string) => {
   return prisma.workLog.findMany({
     where: { userId },
     include: {
@@ -83,28 +75,11 @@ export const getWorkLogsByUser = async (
 };
 
 export const updateWorkLog = async (
-  userId: string,
   workLogId: string,
   data: Partial<CreateWorkLogDto>
 ) => {
-  const workLog = await prisma.workLog.findUnique({
-    where: { id: workLogId },
-  });
-
-  if (!workLog) {
-    throw new Error("WorkLog not found");
-  }
-
-  if (workLog.userId !== userId) {
-    throw new Error("Forbidden: cannot update others' work logs");
-  }
-
   return prisma.workLog.update({
     where: { id: workLogId },
-    data: {
-      date: data.date ? new Date(data.date) : workLog.date,
-      hours: data.hours ?? workLog.hours,
-      activity: data.activity ?? workLog.activity,
-    },
+    data,
   });
 };

@@ -11,7 +11,7 @@ import {
   addUserToProjectSchema,
 } from "../schemas/projects.schema";
 import { requireAuth } from "../middlewares/auth";
-import { roleChecker } from "../middlewares/roleChecker";
+import { requireRole } from "../middlewares/requireRole";
 
 const router = Router();
 
@@ -21,17 +21,13 @@ router.get("/:projectId", requireAuth, getProjectById);
 
 router.post(
   "/",
-  requireAuth,
-  roleChecker,
-  validate(createProjectSchema),
+  [requireAuth, requireRole, validate(createProjectSchema)],
   createProject
 );
 
 router.post(
   "/:projectId/users",
-  requireAuth,
-  roleChecker,
-  validate(addUserToProjectSchema),
+  [requireAuth, requireRole, validate(addUserToProjectSchema)],
   addUserToProject
 );
 

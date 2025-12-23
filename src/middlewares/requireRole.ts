@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import { AuthRequest } from "./auth";
 import { Role } from "@prisma/client";
 
-export const roleChecker = (
+export const requireRole = (
   req: AuthRequest,
   res: Response,
   next: NextFunction

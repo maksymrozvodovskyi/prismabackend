@@ -6,18 +6,25 @@ import {
   updateWorkLog,
 } from "../controllers/workLogs.controller";
 import { validate } from "../middlewares/validate";
-import { createWorkLogSchema } from "../schemas/workLogs.schema";
+import {
+  createWorkLogSchema,
+  updateWorkLogSchema,
+} from "../schemas/workLogs.schema";
 import { requireAuth } from "../middlewares/auth";
-import { roleChecker } from "../middlewares/roleChecker";
+import { requireRole } from "../middlewares/requireRole";
 
 const router = Router();
 
 router.get("/project/:projectId", requireAuth, getWorkLogsByProject);
 
-router.get("/user/:userId", requireAuth, roleChecker, getWorkLogsByUser);
+router.get("/user/:userId", [requireAuth, requireRole], getWorkLogsByUser);
 
-router.post("/", requireAuth, validate(createWorkLogSchema), createWorkLog);
+router.post("/", [requireAuth, validate(createWorkLogSchema)], createWorkLog);
 
-router.put("/:workLogId", requireAuth, updateWorkLog);
+router.put(
+  "/:workLogId",
+  [requireAuth, validate(updateWorkLogSchema)],
+  updateWorkLog
+);
 
 export default router;

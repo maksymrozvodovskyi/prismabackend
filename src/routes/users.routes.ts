@@ -3,18 +3,16 @@ import { createUser, getUsers } from "../controllers/users.controller";
 import { validate } from "../middlewares/validate";
 import { createUserSchema } from "../schemas/user.schema";
 import { requireAuth } from "../middlewares/auth";
-import { roleChecker } from "../middlewares/roleChecker";
+import { requireRole } from "../middlewares/requireRole";
 
 const router = Router();
 
 router.post(
   "/",
-  requireAuth,
-  roleChecker,
-  validate(createUserSchema),
+  [requireAuth, requireRole, validate(createUserSchema)],
   createUser
 );
 
-router.get("/", requireAuth, roleChecker, getUsers);
+router.get("/", [requireAuth, requireRole], getUsers);
 
 export default router;

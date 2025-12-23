@@ -5,6 +5,7 @@ import {
   AddUserToProjectDto,
 } from "../schemas/projects.schema";
 import { AuthRequest } from "../middlewares/auth";
+import { Role } from "@prisma/client";
 
 export const createProject = async (
   req: AuthRequest,
@@ -66,10 +67,14 @@ export const getListOfProjects = async (
   next: NextFunction
 ) => {
   try {
-    const projects = await projectService.getListOfProjects(
-      req.userId!,
-      req.userRole!
-    );
+    let projects;
+
+    if (req.userRole === Role.ADMIN) {
+      projects = await projectService.getAllProjects();
+    } else {
+      projects = await projectService.getProjectsByUser(req.userId!);
+    }
+
     res.json(projects);
   } catch (err) {
     next(err);
