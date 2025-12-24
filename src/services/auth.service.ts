@@ -17,6 +17,7 @@ export const login = async (email: string, password: string) => {
   const accessToken = getToken({
     id: user.id,
     email: user.email,
+    role: user.role,
   });
 
   return {

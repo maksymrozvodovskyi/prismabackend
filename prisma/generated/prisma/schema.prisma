@@ -21,6 +21,7 @@ enum ActivityType {
   CODING
   REVIEW
   STUDING
+  SICKLEAVE
 }
 
 model User {
@@ -34,7 +35,6 @@ model User {
 
   projects Project[]
   workLogs WorkLog[]
-  sessions Session[]
 }
 
 model Project {
@@ -64,15 +64,4 @@ model WorkLog {
 
   @@index([userId])
   @@index([projectId])
-}
-
-model Session {
-  id          String   @id @default(cuid())
-  userId      String
-  accessToken String   @unique
-  expiresAt   DateTime
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId])
 }

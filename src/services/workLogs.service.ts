@@ -1,7 +1,12 @@
+import { ActivityType } from "../../prisma/generated/prisma";
 import { prisma } from "../prisma";
 import { CreateWorkLogDto } from "../schemas/workLogs.schema";
 
 export const createWorkLog = async (userId: string, data: CreateWorkLogDto) => {
+  const isSickLeave = data.activity === ActivityType.SICKLEAVE;
+
+  const hours = isSickLeave ? 0 : data.hours;
+
   const isMember = await prisma.project.findFirst({
     where: {
       id: data.projectId,
@@ -15,12 +20,26 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDto) => {
     throw new Error("Forbidden: user is not part of this project");
   }
 
+  if (isSickLeave) {
+    const existingWorkLog = await prisma.workLog.findFirst({
+      where: {
+        userId,
+        date: new Date(data.date),
+        hours: { gt: 0 },
+      },
+    });
+
+    if (existingWorkLog) {
+      throw new Error("Cannot add sick leave on a working day");
+    }
+  }
+
   return prisma.workLog.create({
     data: {
       userId,
       projectId: data.projectId,
       date: new Date(data.date),
-      hours: data.hours,
+      hours,
       activity: data.activity,
     },
   });
@@ -57,14 +76,7 @@ export const getWorkLogsByProject = async (
   });
 };
 
-export const getWorkLogsByUser = async (
-  requesterId: string,
-  userId: string
-) => {
-  if (requesterId !== userId) {
-    throw new Error("Forbidden");
-  }
-
+export const getWorkLogsByUser = async (userId: string) => {
   return prisma.workLog.findMany({
     where: { userId },
     include: {
@@ -77,5 +89,15 @@ export const getWorkLogsByUser = async (
       },
     },
     orderBy: { date: "desc" },
+  });
+};
+
+export const updateWorkLog = async (
+  workLogId: string,
+  data: Partial<CreateWorkLogDto>
+) => {
+  return prisma.workLog.update({
+    where: { id: workLogId },
+    data,
   });
 };

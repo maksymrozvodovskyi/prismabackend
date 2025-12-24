@@ -1,16 +1,19 @@
 import jwt from "jsonwebtoken";
+import { Role } from "@prisma/client";
 
 const SECRET_KEY = process.env.JWT_SECRET!;
 
 export type JwtPayload = {
   id: string;
   email: string;
+  role: Role;
 };
 
-export const getToken = (user: { id: string; email: string }) => {
+export const getToken = (user: { id: string; email: string; role: Role }) => {
   const payload: JwtPayload = {
     id: user.id,
     email: user.email,
+    role: user.role,
   };
 
   return jwt.sign(payload, SECRET_KEY, {

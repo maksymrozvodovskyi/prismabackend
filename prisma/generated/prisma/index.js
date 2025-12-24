@@ -123,13 +123,6 @@ exports.Prisma.WorkLogScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.SessionScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  accessToken: 'accessToken',
-  expiresAt: 'expiresAt'
-};
-
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -157,14 +150,14 @@ exports.ProjectStatus = exports.$Enums.ProjectStatus = {
 exports.ActivityType = exports.$Enums.ActivityType = {
   CODING: 'CODING',
   REVIEW: 'REVIEW',
-  STUDING: 'STUDING'
+  STUDING: 'STUDING',
+  SICKLEAVE: 'SICKLEAVE'
 };
 
 exports.Prisma.ModelName = {
   User: 'User',
   Project: 'Project',
-  WorkLog: 'WorkLog',
-  Session: 'Session'
+  WorkLog: 'WorkLog'
 };
 /**
  * Create the Client
@@ -174,10 +167,10 @@ const config = {
   "clientVersion": "7.1.0",
   "engineVersion": "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba",
   "activeProvider": "postgresql",
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum Role {\n  ADMIN\n  EMPLOYEE\n}\n\nenum ProjectStatus {\n  INPROGRESS\n  SUPPORT\n}\n\nenum ActivityType {\n  CODING\n  REVIEW\n  STUDING\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  password  String\n  name      String\n  role      Role\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  projects Project[]\n  workLogs WorkLog[]\n  sessions Session[]\n}\n\nmodel Project {\n  id          String        @id @default(cuid())\n  name        String\n  description String?\n  status      ProjectStatus\n  createdAt   DateTime      @default(now())\n  updatedAt   DateTime      @updatedAt\n\n  users    User[]\n  workLogs WorkLog[]\n}\n\nmodel WorkLog {\n  id        String       @id @default(cuid())\n  userId    String\n  projectId String\n  date      DateTime     @db.Date\n  hours     Float\n  activity  ActivityType\n  createdAt DateTime     @default(now())\n  updatedAt DateTime     @updatedAt\n\n  user    User    @relation(fields: [userId], references: [id])\n  project Project @relation(fields: [projectId], references: [id])\n\n  @@index([userId])\n  @@index([projectId])\n}\n\nmodel Session {\n  id          String   @id @default(cuid())\n  userId      String\n  accessToken String   @unique\n  expiresAt   DateTime\n\n  user User @relation(fields: [userId], references: [id])\n\n  @@index([userId])\n}\n"
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum Role {\n  ADMIN\n  EMPLOYEE\n}\n\nenum ProjectStatus {\n  INPROGRESS\n  SUPPORT\n}\n\nenum ActivityType {\n  CODING\n  REVIEW\n  STUDING\n  SICKLEAVE\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  password  String\n  name      String\n  role      Role\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  projects Project[]\n  workLogs WorkLog[]\n}\n\nmodel Project {\n  id          String        @id @default(cuid())\n  name        String\n  description String?\n  status      ProjectStatus\n  createdAt   DateTime      @default(now())\n  updatedAt   DateTime      @updatedAt\n\n  users    User[]\n  workLogs WorkLog[]\n}\n\nmodel WorkLog {\n  id        String       @id @default(cuid())\n  userId    String\n  projectId String\n  date      DateTime     @db.Date\n  hours     Float\n  activity  ActivityType\n  createdAt DateTime     @default(now())\n  updatedAt DateTime     @updatedAt\n\n  user    User    @relation(fields: [userId], references: [id])\n  project Project @relation(fields: [projectId], references: [id])\n\n  @@index([userId])\n  @@index([projectId])\n}\n"
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"projects\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"ProjectToUser\"},{\"name\":\"workLogs\",\"kind\":\"object\",\"type\":\"WorkLog\",\"relationName\":\"UserToWorkLog\"},{\"name\":\"sessions\",\"kind\":\"object\",\"type\":\"Session\",\"relationName\":\"SessionToUser\"}],\"dbName\":null},\"Project\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"ProjectStatus\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"users\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ProjectToUser\"},{\"name\":\"workLogs\",\"kind\":\"object\",\"type\":\"WorkLog\",\"relationName\":\"ProjectToWorkLog\"}],\"dbName\":null},\"WorkLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"projectId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"hours\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"activity\",\"kind\":\"enum\",\"type\":\"ActivityType\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToWorkLog\"},{\"name\":\"project\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"ProjectToWorkLog\"}],\"dbName\":null},\"Session\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accessToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"SessionToUser\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"projects\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"ProjectToUser\"},{\"name\":\"workLogs\",\"kind\":\"object\",\"type\":\"WorkLog\",\"relationName\":\"UserToWorkLog\"}],\"dbName\":null},\"Project\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"ProjectStatus\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"users\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ProjectToUser\"},{\"name\":\"workLogs\",\"kind\":\"object\",\"type\":\"WorkLog\",\"relationName\":\"ProjectToWorkLog\"}],\"dbName\":null},\"WorkLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"projectId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"hours\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"activity\",\"kind\":\"enum\",\"type\":\"ActivityType\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToWorkLog\"},{\"name\":\"project\",\"kind\":\"object\",\"type\":\"Project\",\"relationName\":\"ProjectToWorkLog\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.compilerWasm = {
       getRuntime: async () => require('./query_compiler_bg.js'),
