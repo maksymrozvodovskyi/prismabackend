@@ -22,6 +22,7 @@ enum ActivityType {
   REVIEW
   STUDING
   SICKLEAVE
+  VACATION
 }
 
 model User {
@@ -56,6 +57,7 @@ model WorkLog {
   date      DateTime     @db.Date
   hours     Float
   activity  ActivityType
+  isApproved Boolean?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 

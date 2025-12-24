@@ -146,6 +146,7 @@ exports.Prisma.WorkLogScalarFieldEnum = {
   date: 'date',
   hours: 'hours',
   activity: 'activity',
+  isApproved: 'isApproved',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -178,7 +179,8 @@ exports.ActivityType = exports.$Enums.ActivityType = {
   CODING: 'CODING',
   REVIEW: 'REVIEW',
   STUDING: 'STUDING',
-  SICKLEAVE: 'SICKLEAVE'
+  SICKLEAVE: 'SICKLEAVE',
+  VACATION: 'VACATION'
 };
 
 exports.Prisma.ModelName = {

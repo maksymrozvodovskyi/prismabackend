@@ -53,7 +53,8 @@ export const ActivityType: {
   CODING: 'CODING',
   REVIEW: 'REVIEW',
   STUDING: 'STUDING',
-  SICKLEAVE: 'SICKLEAVE'
+  SICKLEAVE: 'SICKLEAVE',
+  VACATION: 'VACATION'
 };
 
 export type ActivityType = (typeof ActivityType)[keyof typeof ActivityType]
@@ -3428,6 +3429,7 @@ export namespace Prisma {
     date: Date | null
     hours: number | null
     activity: $Enums.ActivityType | null
+    isApproved: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3439,6 +3441,7 @@ export namespace Prisma {
     date: Date | null
     hours: number | null
     activity: $Enums.ActivityType | null
+    isApproved: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3450,6 +3453,7 @@ export namespace Prisma {
     date: number
     hours: number
     activity: number
+    isApproved: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3471,6 +3475,7 @@ export namespace Prisma {
     date?: true
     hours?: true
     activity?: true
+    isApproved?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3482,6 +3487,7 @@ export namespace Prisma {
     date?: true
     hours?: true
     activity?: true
+    isApproved?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3493,6 +3499,7 @@ export namespace Prisma {
     date?: true
     hours?: true
     activity?: true
+    isApproved?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3591,6 +3598,7 @@ export namespace Prisma {
     date: Date
     hours: number
     activity: $Enums.ActivityType
+    isApproved: boolean | null
     createdAt: Date
     updatedAt: Date
     _count: WorkLogCountAggregateOutputType | null
@@ -3621,6 +3629,7 @@ export namespace Prisma {
     date?: boolean
     hours?: boolean
     activity?: boolean
+    isApproved?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -3634,6 +3643,7 @@ export namespace Prisma {
     date?: boolean
     hours?: boolean
     activity?: boolean
+    isApproved?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -3647,6 +3657,7 @@ export namespace Prisma {
     date?: boolean
     hours?: boolean
     activity?: boolean
+    isApproved?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -3660,11 +3671,12 @@ export namespace Prisma {
     date?: boolean
     hours?: boolean
     activity?: boolean
+    isApproved?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type WorkLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "projectId" | "date" | "hours" | "activity" | "createdAt" | "updatedAt", ExtArgs["result"]["workLog"]>
+  export type WorkLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "projectId" | "date" | "hours" | "activity" | "isApproved" | "createdAt" | "updatedAt", ExtArgs["result"]["workLog"]>
   export type WorkLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     project?: boolean | ProjectDefaultArgs<ExtArgs>
@@ -3691,6 +3703,7 @@ export namespace Prisma {
       date: Date
       hours: number
       activity: $Enums.ActivityType
+      isApproved: boolean | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["workLog"]>
@@ -4124,6 +4137,7 @@ export namespace Prisma {
     readonly date: FieldRef<"WorkLog", 'DateTime'>
     readonly hours: FieldRef<"WorkLog", 'Float'>
     readonly activity: FieldRef<"WorkLog", 'ActivityType'>
+    readonly isApproved: FieldRef<"WorkLog", 'Boolean'>
     readonly createdAt: FieldRef<"WorkLog", 'DateTime'>
     readonly updatedAt: FieldRef<"WorkLog", 'DateTime'>
   }
@@ -4586,6 +4600,7 @@ export namespace Prisma {
     date: 'date',
     hours: 'hours',
     activity: 'activity',
+    isApproved: 'isApproved',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -4703,6 +4718,13 @@ export namespace Prisma {
    * Reference to a field of type 'ActivityType[]'
    */
   export type ListEnumActivityTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ActivityType[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -4864,6 +4886,7 @@ export namespace Prisma {
     date?: DateTimeFilter<"WorkLog"> | Date | string
     hours?: FloatFilter<"WorkLog"> | number
     activity?: EnumActivityTypeFilter<"WorkLog"> | $Enums.ActivityType
+    isApproved?: BoolNullableFilter<"WorkLog"> | boolean | null
     createdAt?: DateTimeFilter<"WorkLog"> | Date | string
     updatedAt?: DateTimeFilter<"WorkLog"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -4877,6 +4900,7 @@ export namespace Prisma {
     date?: SortOrder
     hours?: SortOrder
     activity?: SortOrder
+    isApproved?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
@@ -4893,6 +4917,7 @@ export namespace Prisma {
     date?: DateTimeFilter<"WorkLog"> | Date | string
     hours?: FloatFilter<"WorkLog"> | number
     activity?: EnumActivityTypeFilter<"WorkLog"> | $Enums.ActivityType
+    isApproved?: BoolNullableFilter<"WorkLog"> | boolean | null
     createdAt?: DateTimeFilter<"WorkLog"> | Date | string
     updatedAt?: DateTimeFilter<"WorkLog"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -4906,6 +4931,7 @@ export namespace Prisma {
     date?: SortOrder
     hours?: SortOrder
     activity?: SortOrder
+    isApproved?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: WorkLogCountOrderByAggregateInput
@@ -4925,6 +4951,7 @@ export namespace Prisma {
     date?: DateTimeWithAggregatesFilter<"WorkLog"> | Date | string
     hours?: FloatWithAggregatesFilter<"WorkLog"> | number
     activity?: EnumActivityTypeWithAggregatesFilter<"WorkLog"> | $Enums.ActivityType
+    isApproved?: BoolNullableWithAggregatesFilter<"WorkLog"> | boolean | null
     createdAt?: DateTimeWithAggregatesFilter<"WorkLog"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"WorkLog"> | Date | string
   }
@@ -5083,6 +5110,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutWorkLogsInput
@@ -5096,6 +5124,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5105,6 +5134,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutWorkLogsNestedInput
@@ -5118,6 +5148,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5129,6 +5160,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5138,6 +5170,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5149,6 +5182,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5388,6 +5422,11 @@ export namespace Prisma {
     not?: NestedEnumActivityTypeFilter<$PrismaModel> | $Enums.ActivityType
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
@@ -5405,6 +5444,7 @@ export namespace Prisma {
     date?: SortOrder
     hours?: SortOrder
     activity?: SortOrder
+    isApproved?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -5420,6 +5460,7 @@ export namespace Prisma {
     date?: SortOrder
     hours?: SortOrder
     activity?: SortOrder
+    isApproved?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -5431,6 +5472,7 @@ export namespace Prisma {
     date?: SortOrder
     hours?: SortOrder
     activity?: SortOrder
+    isApproved?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -5463,6 +5505,14 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumActivityTypeFilter<$PrismaModel>
     _max?: NestedEnumActivityTypeFilter<$PrismaModel>
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type ProjectCreateNestedManyWithoutUsersInput = {
@@ -5669,6 +5719,10 @@ export namespace Prisma {
     set?: $Enums.ActivityType
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type UserUpdateOneRequiredWithoutWorkLogsNestedInput = {
     create?: XOR<UserCreateWithoutWorkLogsInput, UserUncheckedCreateWithoutWorkLogsInput>
     connectOrCreate?: UserCreateOrConnectWithoutWorkLogsInput
@@ -5846,6 +5900,11 @@ export namespace Prisma {
     not?: NestedEnumActivityTypeFilter<$PrismaModel> | $Enums.ActivityType
   }
 
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
     in?: number[] | ListFloatFieldRefInput<$PrismaModel>
@@ -5870,6 +5929,14 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumActivityTypeFilter<$PrismaModel>
     _max?: NestedEnumActivityTypeFilter<$PrismaModel>
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type ProjectCreateWithoutUsersInput = {
@@ -5902,6 +5969,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
     project: ProjectCreateNestedOneWithoutWorkLogsInput
@@ -5913,6 +5981,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5981,6 +6050,7 @@ export namespace Prisma {
     date?: DateTimeFilter<"WorkLog"> | Date | string
     hours?: FloatFilter<"WorkLog"> | number
     activity?: EnumActivityTypeFilter<"WorkLog"> | $Enums.ActivityType
+    isApproved?: BoolNullableFilter<"WorkLog"> | boolean | null
     createdAt?: DateTimeFilter<"WorkLog"> | Date | string
     updatedAt?: DateTimeFilter<"WorkLog"> | Date | string
   }
@@ -6017,6 +6087,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutWorkLogsInput
@@ -6028,6 +6099,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -6209,6 +6281,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -6247,6 +6320,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     project?: ProjectUpdateOneRequiredWithoutWorkLogsNestedInput
@@ -6258,6 +6332,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -6268,6 +6343,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -6278,6 +6354,7 @@ export namespace Prisma {
     date: Date | string
     hours: number
     activity: $Enums.ActivityType
+    isApproved?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -6319,6 +6396,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutWorkLogsNestedInput
@@ -6330,6 +6408,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -6340,6 +6419,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     hours?: FloatFieldUpdateOperationsInput | number
     activity?: EnumActivityTypeFieldUpdateOperationsInput | $Enums.ActivityType
+    isApproved?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
