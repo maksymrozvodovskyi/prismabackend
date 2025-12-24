@@ -150,13 +150,6 @@ exports.Prisma.WorkLogScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.SessionScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  accessToken: 'accessToken',
-  expiresAt: 'expiresAt'
-};
-
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -184,14 +177,14 @@ exports.ProjectStatus = exports.$Enums.ProjectStatus = {
 exports.ActivityType = exports.$Enums.ActivityType = {
   CODING: 'CODING',
   REVIEW: 'REVIEW',
-  STUDING: 'STUDING'
+  STUDING: 'STUDING',
+  SICKLEAVE: 'SICKLEAVE'
 };
 
 exports.Prisma.ModelName = {
   User: 'User',
   Project: 'Project',
-  WorkLog: 'WorkLog',
-  Session: 'Session'
+  WorkLog: 'WorkLog'
 };
 
 /**

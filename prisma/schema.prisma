@@ -21,6 +21,7 @@ enum ActivityType {
   CODING
   REVIEW
   STUDING
+  SICKLEAVE
 }
 
 model User {

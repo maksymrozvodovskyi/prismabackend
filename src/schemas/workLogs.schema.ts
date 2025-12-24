@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ActivityType } from "@prisma/client";
+import { ActivityType } from "../../prisma/generated/prisma";
 
 export const createWorkLogSchema = z.object({
   projectId: z.string().cuid(),
