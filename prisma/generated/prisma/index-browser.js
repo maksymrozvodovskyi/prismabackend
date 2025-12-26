@@ -178,7 +178,8 @@ exports.ActivityType = exports.$Enums.ActivityType = {
   CODING: 'CODING',
   REVIEW: 'REVIEW',
   STUDING: 'STUDING',
-  SICKLEAVE: 'SICKLEAVE'
+  SICKLEAVE: 'SICKLEAVE',
+  VACATION: 'VACATION'
 };
 
 exports.Prisma.ModelName = {

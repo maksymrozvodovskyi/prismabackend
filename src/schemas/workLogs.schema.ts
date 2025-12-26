@@ -16,5 +16,23 @@ export const updateWorkLogSchema = z
   })
   .strict();
 
+export const getWorkLogsByTimeSchema = z
+  .object({
+    startDate: z
+      .string()
+      .date()
+      .transform((val) => new Date(val)),
+    endDate: z
+      .string()
+      .date()
+      .transform((val) => new Date(val)),
+    sortOrder: z.enum(["asc", "desc"]).optional().default("asc"),
+  })
+  .refine((data) => data.startDate <= data.endDate, {
+    message: "startDate must be before or equal to endDate",
+    path: ["startDate"],
+  });
+
 export type CreateWorkLogDto = z.infer<typeof createWorkLogSchema>;
 export type UpdateWorkLogDto = z.infer<typeof updateWorkLogSchema>;
+export type GetWorkLogsByTimeQuery = z.infer<typeof getWorkLogsByTimeSchema>;
