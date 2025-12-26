@@ -9,6 +9,11 @@ export type CreateUserInput = {
   role: Role;
 };
 
+type DateFilter = {
+  startDate?: string;
+  endDate?: string;
+};
+
 export const createUser = async (data: CreateUserInput) => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -32,4 +37,60 @@ export const getUsers = () => {
       createdAt: true,
     },
   });
+};
+
+export const getUserDetails = async (
+  userId: string,
+  { startDate, endDate }: DateFilter
+) => {
+  const dateFilter =
+    startDate || endDate
+      ? {
+          date: {
+            ...(startDate && { gte: new Date(startDate) }),
+            ...(endDate && { lte: new Date(endDate) }),
+          },
+        }
+      : undefined;
+
+  const projects = await prisma.project.findMany({
+    where: {
+      workLogs: {
+        some: {
+          userId,
+          ...(dateFilter ?? {}),
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      workLogs: {
+        where: {
+          userId,
+          ...(dateFilter ?? {}),
+        },
+        select: {
+          id: true,
+          date: true,
+          hours: true,
+          activity: true,
+        },
+        orderBy: { date: "asc" },
+      },
+    },
+  });
+
+  const totalHours = projects.reduce(
+    (sum, project) =>
+      sum + project.workLogs.reduce((pSum, log) => pSum + log.hours, 0),
+    0
+  );
+
+  return {
+    userId,
+    totalHours,
+    projectsCount: projects.length,
+    projects,
+  };
 };

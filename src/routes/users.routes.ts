@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { createUser, getUsers } from "../controllers/users.controller";
+import {
+  createUser,
+  getUserDetails,
+  getUsers,
+} from "../controllers/users.controller";
 import { validate } from "../middlewares/validate";
 import { createUserSchema } from "../schemas/user.schema";
 import { requireAuth } from "../middlewares/auth";
@@ -14,5 +18,7 @@ router.post(
 );
 
 router.get("/", [requireAuth, requireRole], getUsers);
+
+router.get("/:userId/details", requireAuth, requireRole, getUserDetails);
 
 export default router;

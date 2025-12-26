@@ -101,3 +101,46 @@ export const updateWorkLog = async (
     data,
   });
 };
+
+export const getWorkLogsByTime = async (
+  startDate: string,
+  endDate: string,
+  sortOrder: "asc" | "desc" = "asc"
+) => {
+  const logs = await prisma.workLog.findMany({
+    where: {
+      date: { gte: new Date(startDate), lte: new Date(endDate) },
+    },
+    select: {
+      id: true,
+      date: true,
+      hours: true,
+      activity: true,
+      user: { select: { id: true, name: true, email: true } },
+      project: { select: { id: true, name: true } },
+    },
+    orderBy: { date: sortOrder },
+  });
+
+  const summary: Record<string, any> = {};
+
+  logs.forEach((log) => {
+    const { user, project, hours } = log;
+
+    if (!summary[user.id]) {
+      summary[user.id] = { user, totalHours: 0, projects: {} };
+    }
+
+    summary[user.id].totalHours += hours;
+
+    if (!summary[user.id].projects[project.id]) {
+      summary[user.id].projects[project.id] = { project, hours: 0, logs: [] };
+    }
+
+    const projectSummary = summary[user.id].projects[project.id];
+    projectSummary.hours += hours;
+    projectSummary.logs.push(log);
+  });
+
+  return { logs, summary };
+};

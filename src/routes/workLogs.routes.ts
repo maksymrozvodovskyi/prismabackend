@@ -3,6 +3,7 @@ import {
   createWorkLog,
   getWorkLogsByProject,
   getWorkLogsByUser,
+  getWorkLogsByTime,
   updateWorkLog,
 } from "../controllers/workLogs.controller";
 import { validate } from "../middlewares/validate";
@@ -18,6 +19,8 @@ const router = Router();
 router.get("/project/:projectId", requireAuth, getWorkLogsByProject);
 
 router.get("/user/:userId", [requireAuth, requireRole], getWorkLogsByUser);
+
+router.get("/time", [requireAuth, requireRole], getWorkLogsByTime);
 
 router.post("/", [requireAuth, validate(createWorkLogSchema)], createWorkLog);
 

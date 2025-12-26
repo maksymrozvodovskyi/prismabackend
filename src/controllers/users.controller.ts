@@ -34,3 +34,23 @@ export const getUsers = async (
     next(err);
   }
 };
+
+export const getUserDetails = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId } = req.params;
+    const { startDate, endDate } = req.query;
+
+    const data = await userService.getUserDetails(userId, {
+      startDate: startDate as string | undefined,
+      endDate: endDate as string | undefined,
+    });
+
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+};
