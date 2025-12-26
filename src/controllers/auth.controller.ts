@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as authService from "../services/auth.service";
-import { LoginDto } from "../schemas/auth.scema";
+import { LoginDto } from "../schemas/auth.schema";
 import { AuthRequest } from "../middlewares/auth";
 
 export const login = async (

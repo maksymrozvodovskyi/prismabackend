@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import * as workLogService from "../services/workLogs.service";
 import { CreateWorkLogDto, UpdateWorkLogDto } from "../schemas/workLogs.schema";
 import { AuthRequest } from "../middlewares/auth";

@@ -1,4 +1,3 @@
-import { Role } from "../../prisma/generated/prisma";
 import { prisma } from "../prisma";
 import { CreateProjectDto } from "../schemas/projects.schema";
 

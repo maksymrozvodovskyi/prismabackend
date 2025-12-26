@@ -15,7 +15,7 @@ import { requireRole } from "../middlewares/requireRole";
 
 const router = Router();
 
-router.get("/", requireAuth, getListOfProjects); // всі адмін
+router.get("/", requireAuth, getListOfProjects);
 
 router.get("/:projectId", requireAuth, getProjectById);
 
