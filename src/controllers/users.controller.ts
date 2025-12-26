@@ -1,8 +1,7 @@
 import { Response, NextFunction } from "express";
 import * as userService from "../services/users.service";
-import { CreateUserDto } from "../schemas/user.schema";
+import { CreateUserDto, dateQuerySchema } from "../schemas/user.schema";
 import { AuthRequest } from "../middlewares/auth";
-import { assertUniqueUserEmail } from "../utils/assertUniqueUserEmail";
 
 export const createUser = async (
   req: AuthRequest,
@@ -11,8 +10,6 @@ export const createUser = async (
 ) => {
   try {
     const dto = req.body as CreateUserDto;
-
-    await assertUniqueUserEmail(dto.email);
 
     const user = await userService.createUser(dto);
 
@@ -42,11 +39,18 @@ export const getUserDetails = async (
 ) => {
   try {
     const { userId } = req.params;
-    const { startDate, endDate } = req.query;
+
+    const { startDate, endDate } = dateQuerySchema.parse(req.query);
+
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      return res
+        .status(400)
+        .json({ error: "startDate cannot be after endDate" });
+    }
 
     const data = await userService.getUserDetails(userId, {
-      startDate: startDate as string | undefined,
-      endDate: endDate as string | undefined,
+      startDate,
+      endDate,
     });
 
     res.json(data);

@@ -8,4 +8,10 @@ export const createUserSchema = z.object({
   role: z.nativeEnum(Role),
 });
 
+export const dateQuerySchema = z.object({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
 export type CreateUserDto = z.infer<typeof createUserSchema>;
+export type DateQueryDto = z.infer<typeof dateQuerySchema>;

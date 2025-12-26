@@ -10,10 +10,6 @@ export const login = async (
 ) => {
   const { email, password } = req.body as LoginDto;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required" });
-  }
-
   try {
     const result = await authService.login(email, password);
 
@@ -23,18 +19,13 @@ export const login = async (
 
     res.json(result);
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
 export const me = async (req: AuthRequest, res: Response) => {
-  if (!req.userId) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
   try {
-    const user = await authService.getMe(req.userId);
+    const user = await authService.getMe(req.userId!);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -42,7 +33,6 @@ export const me = async (req: AuthRequest, res: Response) => {
 
     return res.json({ user });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

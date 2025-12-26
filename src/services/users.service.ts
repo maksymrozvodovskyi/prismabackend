@@ -14,7 +14,19 @@ type DateFilter = {
   endDate?: string;
 };
 
+const assertUniqueUserEmail = async (email: string) => {
+  const exists = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (exists) {
+    throw new Error("User already exists");
+  }
+};
+
 export const createUser = async (data: CreateUserInput) => {
+  await assertUniqueUserEmail(data.email);
+
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   return prisma.user.create({
@@ -43,22 +55,23 @@ export const getUserDetails = async (
   userId: string,
   { startDate, endDate }: DateFilter
 ) => {
-  const dateFilter =
-    startDate || endDate
+  const dateFilter = {
+    ...(startDate || endDate
       ? {
           date: {
             ...(startDate && { gte: new Date(startDate) }),
             ...(endDate && { lte: new Date(endDate) }),
           },
         }
-      : undefined;
+      : {}),
+  };
 
   const projects = await prisma.project.findMany({
     where: {
       workLogs: {
         some: {
           userId,
-          ...(dateFilter ?? {}),
+          ...dateFilter,
         },
       },
     },
@@ -68,7 +81,7 @@ export const getUserDetails = async (
       workLogs: {
         where: {
           userId,
-          ...(dateFilter ?? {}),
+          ...dateFilter,
         },
         select: {
           id: true,

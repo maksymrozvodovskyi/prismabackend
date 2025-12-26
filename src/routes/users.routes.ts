@@ -19,6 +19,6 @@ router.post(
 
 router.get("/", [requireAuth, requireRole], getUsers);
 
-router.get("/:userId/details", requireAuth, requireRole, getUserDetails);
+router.get("/:userId", requireAuth, requireRole, getUserDetails);
 
 export default router;

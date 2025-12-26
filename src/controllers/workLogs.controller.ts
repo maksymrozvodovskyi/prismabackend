@@ -1,14 +1,14 @@
 import { Response, NextFunction } from "express";
 import * as workLogService from "../services/workLogs.service";
-import { CreateWorkLogDto, UpdateWorkLogDto } from "../schemas/workLogs.schema";
+import {
+  CreateWorkLogDto,
+  GetWorkLogsByTimeQuery,
+  UpdateWorkLogDto,
+} from "../schemas/workLogs.schema";
 import { AuthRequest } from "../middlewares/auth";
 import { prisma } from "../prisma";
 
 export const createWorkLog = async (req: AuthRequest, res: Response) => {
-  if (!req.userId) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
   const dto = req.body as CreateWorkLogDto;
 
   if (!dto.projectId || dto.hours === undefined || !dto.activity) {
@@ -16,11 +16,10 @@ export const createWorkLog = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const workLog = await workLogService.createWorkLog(req.userId, dto);
+    const workLog = await workLogService.createWorkLog(req.userId!, dto);
 
     return res.status(201).json(workLog);
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -32,19 +31,14 @@ export const getWorkLogsByProject = async (req: AuthRequest, res: Response) => {
     return res.status(400).json({ message: "ProjectId required" });
   }
 
-  if (!req.userId) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
   try {
     const logs = await workLogService.getWorkLogsByProject(
-      req.userId,
+      req.userId!,
       projectId
     );
 
     return res.json(logs);
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -56,16 +50,11 @@ export const getWorkLogsByUser = async (req: AuthRequest, res: Response) => {
     return res.status(400).json({ message: "UserId required" });
   }
 
-  if (req.userId !== userId && req.userRole !== "ADMIN") {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
   try {
     const logs = await workLogService.getWorkLogsByUser(userId);
 
     return res.json(logs);
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -113,22 +102,18 @@ export const updateWorkLog = async (
 };
 
 export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
-  const { startDate, endDate } = req.query;
-
-  if (!startDate || !endDate) {
-    return res
-      .status(400)
-      .json({ message: "startDate and endDate are required" });
-  }
-
   try {
+    const { startDate, endDate, sortOrder } =
+      req.query as unknown as GetWorkLogsByTimeQuery;
+
     const result = await workLogService.getWorkLogsByTime(
-      startDate as string,
-      endDate as string
+      startDate,
+      endDate,
+      sortOrder
     );
+
     return res.json(result);
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
