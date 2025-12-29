@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProjectStatus } from "@prisma/client";
+import { ProjectStatus } from "../../prisma/generated/prisma";
 
 export const createProjectSchema = z.object({
   name: z.string().min(1, "Name is required"),

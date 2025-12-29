@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { Role } from "@prisma/client";
+import { Role } from "../../prisma/generated/prisma";
 
 const SECRET_KEY = process.env.JWT_SECRET!;
 

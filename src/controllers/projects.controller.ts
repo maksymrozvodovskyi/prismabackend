@@ -5,7 +5,7 @@ import {
   AddUserToProjectDto,
 } from "../schemas/projects.schema";
 import { AuthRequest } from "../middlewares/auth";
-import { Role } from "@prisma/client";
+import { Role } from "../../prisma/generated/prisma";
 
 export const createProject = async (req: AuthRequest, res: Response) => {
   try {

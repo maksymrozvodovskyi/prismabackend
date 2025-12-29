@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { AuthRequest } from "./auth";
-import { Role } from "@prisma/client";
+import { Role } from "../../prisma/generated/prisma";
 
 export const isAdmin = (
   req: AuthRequest,

@@ -1,5 +1,5 @@
 import { prisma } from "../prisma";
-import { Role } from "@prisma/client";
+import { Role } from "../../prisma/generated/prisma";
 import bcrypt from "bcrypt";
 
 export type CreateUserInput = {
