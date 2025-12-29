@@ -102,61 +102,62 @@ export const updateWorkLog = async (
   });
 };
 
-export const getWorkLogsByTime = async (
+export const getWorkLogsByUserId = async (
+  userId: string,
   startDate: Date,
   endDate: Date,
   sortOrder: "asc" | "desc" = "asc"
 ) => {
+
+  const start = startDate instanceof Date ? startDate : new Date(startDate);
+  const end = endDate instanceof Date ? endDate : new Date(endDate);
+
   const logs = await prisma.workLog.findMany({
     where: {
+      userId,
       date: {
-        gte: startDate,
-        lte: endDate,
+        gte: start,
+        lte: end,
       },
     },
-    select: {
-      id: true,
-      date: true,
-      hours: true,
-      activity: true,
-      user: {
-        select: { id: true, name: true, email: true },
-      },
+    include: {
       project: {
         select: { id: true, name: true },
       },
     },
-    orderBy: {
-      date: sortOrder,
-    },
+    orderBy: { date: sortOrder },
   });
 
-  const summary: Record<string, any> = {};
-
-  for (const log of logs) {
-    const { user, project, hours } = log;
-
-    if (!summary[user.id]) {
-      summary[user.id] = {
-        user,
-        totalHours: 0,
-        projects: {},
-      };
+  const projectsMap: Record<
+    string,
+    {
+      project: { id: string; name: string };
+      totalHours: number;
+      logs: typeof logs;
     }
+  > = {};
 
-    summary[user.id].totalHours += hours;
+  let totalUserHours = 0;
 
-    if (!summary[user.id].projects[project.id]) {
-      summary[user.id].projects[project.id] = {
-        project,
-        hours: 0,
+  logs.forEach((log) => {
+    const projectId = log.project.id;
+    totalUserHours += log.hours;
+
+    if (!projectsMap[projectId]) {
+      projectsMap[projectId] = {
+        project: log.project,
+        totalHours: 0,
         logs: [],
       };
     }
 
-    summary[user.id].projects[project.id].hours += hours;
-    summary[user.id].projects[project.id].logs.push(log);
-  }
+    projectsMap[projectId].totalHours += log.hours;
+    projectsMap[projectId].logs.push(log);
+  });
 
-  return { logs, summary };
+  return {
+    userId,
+    totalUserHours,
+    projects: Object.values(projectsMap),
+  };
 };

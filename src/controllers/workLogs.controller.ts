@@ -11,10 +11,6 @@ import { prisma } from "../prisma";
 export const createWorkLog = async (req: AuthRequest, res: Response) => {
   const dto = req.body as CreateWorkLogDto;
 
-  if (!dto.projectId || dto.hours === undefined || !dto.activity) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-
   try {
     const workLog = await workLogService.createWorkLog(req.userId!, dto);
 
@@ -103,17 +99,21 @@ export const updateWorkLog = async (
 
 export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
   try {
-    const { startDate, endDate, sortOrder } =
-      req.query as unknown as GetWorkLogsByTimeQuery;
+    const { userId } = req.params;
 
-    const result = await workLogService.getWorkLogsByTime(
-      startDate,
-      endDate,
-      sortOrder
+    const { startDate, endDate, sortOrder } =
+      req.query as GetWorkLogsByTimeQuery;
+
+    const result = await workLogService.getWorkLogsByUserId(
+      userId,
+      new Date(startDate),
+      new Date(endDate),
+      sortOrder ?? "asc"
     );
 
     return res.json(result);
   } catch (error) {
+    console.error("Error fetching work logs:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
