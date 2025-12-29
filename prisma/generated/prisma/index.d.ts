@@ -53,7 +53,8 @@ export const ActivityType: {
   CODING: 'CODING',
   REVIEW: 'REVIEW',
   STUDING: 'STUDING',
-  SICKLEAVE: 'SICKLEAVE'
+  SICKLEAVE: 'SICKLEAVE',
+  VACATION: 'VACATION'
 };
 
 export type ActivityType = (typeof ActivityType)[keyof typeof ActivityType]

@@ -1,58 +1,57 @@
 import { Response, NextFunction } from "express";
 import * as workLogService from "../services/workLogs.service";
-import { CreateWorkLogDto, UpdateWorkLogDto } from "../schemas/workLogs.schema";
+import {
+  CreateWorkLogDto,
+  GetWorkLogsByTimeQuery,
+  UpdateWorkLogDto,
+} from "../schemas/workLogs.schema";
 import { AuthRequest } from "../middlewares/auth";
 import { prisma } from "../prisma";
 
-export const createWorkLog = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const workLog = await workLogService.createWorkLog(
-      req.userId!,
-      req.body as CreateWorkLogDto
-    );
+export const createWorkLog = async (req: AuthRequest, res: Response) => {
+  const dto = req.body as CreateWorkLogDto;
 
-    res.status(201).json(workLog);
+  try {
+    const workLog = await workLogService.createWorkLog(req.userId!, dto);
+
+    return res.status(201).json(workLog);
   } catch (err) {
-    next(err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getWorkLogsByProject = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
+export const getWorkLogsByProject = async (req: AuthRequest, res: Response) => {
+  const { projectId } = req.params;
+
+  if (!projectId) {
+    return res.status(400).json({ message: "ProjectId required" });
+  }
+
   try {
     const logs = await workLogService.getWorkLogsByProject(
       req.userId!,
-      req.params.projectId
+      projectId
     );
-    res.json(logs);
+
+    return res.json(logs);
   } catch (err) {
-    next(err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getWorkLogsByUser = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
+export const getWorkLogsByUser = async (req: AuthRequest, res: Response) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ message: "UserId required" });
+  }
+
   try {
-    const { userId } = req.params;
-
-    if (req.userId !== userId && req.userRole !== "ADMIN") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
     const logs = await workLogService.getWorkLogsByUser(userId);
-    res.json(logs);
+
+    return res.json(logs);
   } catch (err) {
-    next(err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -95,5 +94,26 @@ export const updateWorkLog = async (
     res.json(updatedLog);
   } catch (err) {
     next(err);
+  }
+};
+
+export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const { startDate, endDate, sortOrder } =
+      req.query as GetWorkLogsByTimeQuery;
+
+    const result = await workLogService.getWorkLogsByUserId(
+      userId,
+      new Date(startDate),
+      new Date(endDate),
+      sortOrder ?? "asc"
+    );
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error fetching work logs:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

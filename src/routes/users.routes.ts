@@ -1,18 +1,24 @@
 import { Router } from "express";
-import { createUser, getUsers } from "../controllers/users.controller";
+import {
+  createUser,
+  getUserDetails,
+  getUsers,
+} from "../controllers/users.controller";
 import { validate } from "../middlewares/validate";
 import { createUserSchema } from "../schemas/user.schema";
 import { requireAuth } from "../middlewares/auth";
-import { requireRole } from "../middlewares/requireRole";
+import { isAdmin } from "../middlewares/isAdmin";
 
 const router = Router();
 
 router.post(
   "/",
-  [requireAuth, requireRole, validate(createUserSchema)],
+  [requireAuth, isAdmin, validate(createUserSchema)],
   createUser
 );
 
-router.get("/", [requireAuth, requireRole], getUsers);
+router.get("/", [requireAuth, isAdmin], getUsers);
+
+router.get("/:userId", requireAuth, isAdmin, getUserDetails);
 
 export default router;
