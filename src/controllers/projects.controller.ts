@@ -1,8 +1,9 @@
-import { Response, NextFunction } from "express";
+import { Response } from "express";
 import * as projectService from "../services/projects.service";
 import {
   CreateProjectDto,
   AddUserToProjectDto,
+  getProjectsQuerySchema,
 } from "../schemas/projects.schema";
 import { AuthRequest } from "../middlewares/auth";
 import { Role } from "../../prisma/generated/prisma";
@@ -15,7 +16,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
     );
 
     return res.status(201).json(project);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -38,7 +39,7 @@ export const addUserToProject = async (req: AuthRequest, res: Response) => {
     }
 
     return res.json(project);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -58,23 +59,25 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
     }
 
     return res.json(project);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
 export const getListOfProjects = async (req: AuthRequest, res: Response) => {
   try {
-    let projects;
+    const { skip, take } = getProjectsQuerySchema.parse(req.query);
 
-    if (req.userRole === Role.ADMIN) {
-      projects = await projectService.getAllProjects();
-    } else {
-      projects = await projectService.getProjectsByUser(req.userId!);
-    }
+    const result =
+      req.userRole === Role.ADMIN
+        ? await projectService.getAllProjects(skip, take)
+        : await projectService.getProjectsByUser(req.userId!, skip, take);
 
-    return res.json(projects);
-  } catch (err) {
+    return res.json({
+      data: result.projects,
+      total: result.total,
+    });
+  } catch {
     return res.status(500).json({ message: "Internal server error" });
   }
 };

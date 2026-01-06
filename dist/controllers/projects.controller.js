@@ -35,13 +35,14 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getListOfProjects = exports.getProjectById = exports.addUserToProject = exports.createProject = void 0;
 const projectService = __importStar(require("../services/projects.service"));
-const client_1 = require("@prisma/client");
+const projects_schema_1 = require("../schemas/projects.schema");
+const prisma_1 = require("../../prisma/generated/prisma");
 const createProject = async (req, res) => {
     try {
         const project = await projectService.createProject(req.body, req.userId);
         return res.status(201).json(project);
     }
-    catch (err) {
+    catch {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -58,7 +59,7 @@ const addUserToProject = async (req, res) => {
         }
         return res.json(project);
     }
-    catch (err) {
+    catch {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -75,23 +76,23 @@ const getProjectById = async (req, res) => {
         }
         return res.json(project);
     }
-    catch (err) {
+    catch {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
 exports.getProjectById = getProjectById;
 const getListOfProjects = async (req, res) => {
     try {
-        let projects;
-        if (req.userRole === client_1.Role.ADMIN) {
-            projects = await projectService.getAllProjects();
-        }
-        else {
-            projects = await projectService.getProjectsByUser(req.userId);
-        }
-        return res.json(projects);
+        const { skip, take } = projects_schema_1.getProjectsQuerySchema.parse(req.query);
+        const result = req.userRole === prisma_1.Role.ADMIN
+            ? await projectService.getAllProjects(skip, take)
+            : await projectService.getProjectsByUser(req.userId, skip, take);
+        return res.json({
+            data: result.projects,
+            total: result.total,
+        });
     }
-    catch (err) {
+    catch {
         return res.status(500).json({ message: "Internal server error" });
     }
 };

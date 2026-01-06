@@ -45,24 +45,39 @@ const getProjectById = (projectId, userId) => {
     });
 };
 exports.getProjectById = getProjectById;
-const getAllProjects = () => {
-    return prisma_1.prisma.project.findMany({
-        include: {
-            users: {
-                select: { id: true, email: true, name: true, role: true },
+const getAllProjects = async (skip = 0, take = 20) => {
+    const [projects, total] = await prisma_1.prisma.$transaction([
+        prisma_1.prisma.project.findMany({
+            skip,
+            take,
+            orderBy: { createdAt: "desc" },
+            include: {
+                users: {
+                    select: { id: true, email: true, name: true, role: true },
+                },
             },
-        },
-    });
+        }),
+        prisma_1.prisma.project.count(),
+    ]);
+    return { projects, total };
 };
 exports.getAllProjects = getAllProjects;
-const getProjectsByUser = (userId) => {
-    return prisma_1.prisma.project.findMany({
-        where: { users: { some: { id: userId } } },
-        include: {
-            users: {
-                select: { id: true, email: true, name: true, role: true },
+const getProjectsByUser = async (userId, skip = 0, take = 20) => {
+    const where = { users: { some: { id: userId } } };
+    const [projects, total] = await prisma_1.prisma.$transaction([
+        prisma_1.prisma.project.findMany({
+            skip,
+            take,
+            where,
+            orderBy: { createdAt: "desc" },
+            include: {
+                users: {
+                    select: { id: true, email: true, name: true, role: true },
+                },
             },
-        },
-    });
+        }),
+        prisma_1.prisma.project.count({ where }),
+    ]);
+    return { projects, total };
 };
 exports.getProjectsByUser = getProjectsByUser;
