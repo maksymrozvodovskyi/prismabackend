@@ -19,4 +19,4 @@ export const getProjectsQuerySchema = z.object({
 
 export type CreateProjectDto = z.infer<typeof createProjectSchema>;
 export type AddUserToProjectDto = z.infer<typeof addUserToProjectSchema>;
-export type GetProjectsQueryDto = z.infer<typeof getProjectsQuerySchema>;
+export type GetProjectsFiltersDto = z.infer<typeof getProjectsQuerySchema>;

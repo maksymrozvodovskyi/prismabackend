@@ -1,6 +1,8 @@
 import { prisma } from "../prisma";
-import { CreateProjectDto } from "../schemas/projects.schema";
-import { ProjectStatus } from "../../prisma/generated/prisma";
+import {
+  CreateProjectDto,
+  GetProjectsFiltersDto,
+} from "../schemas/projects.schema";
 
 export const createProject = (data: CreateProjectDto, userId: string) => {
   return prisma.project.create({
@@ -45,11 +47,8 @@ export const getProjectById = (projectId: string, userId: string) => {
   });
 };
 
-export const getAllProjects = async (
-  skip = 0,
-  take = 20,
-  status?: ProjectStatus
-) => {
+export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
+  const { skip = 0, take = 20, status } = filters;
   const where = status ? { status } : {};
 
   const [projects, total] = await prisma.$transaction([
@@ -72,10 +71,9 @@ export const getAllProjects = async (
 
 export const getProjectsByUser = async (
   userId: string,
-  skip = 0,
-  take = 20,
-  status?: ProjectStatus
+  filters: GetProjectsFiltersDto
 ) => {
+  const { skip = 0, take = 20, status } = filters;
   const where: any = { users: { some: { id: userId } } };
 
   if (status) {

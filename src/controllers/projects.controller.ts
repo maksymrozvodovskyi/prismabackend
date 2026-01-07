@@ -66,12 +66,12 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
 
 export const getListOfProjects = async (req: AuthRequest, res: Response) => {
   try {
-    const { skip, take, status } = getProjectsQuerySchema.parse(req.query);
+    const filters = getProjectsQuerySchema.parse(req.query);
 
     const result =
       req.userRole === Role.ADMIN
-        ? await projectService.getAllProjects(skip, take, status)
-        : await projectService.getProjectsByUser(req.userId!, skip, take, status);
+        ? await projectService.getAllProjects(filters)
+        : await projectService.getProjectsByUser(req.userId!, filters);
 
     return res.json({
       data: result.projects,
