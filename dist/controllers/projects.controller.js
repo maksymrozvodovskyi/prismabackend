@@ -83,10 +83,10 @@ const getProjectById = async (req, res) => {
 exports.getProjectById = getProjectById;
 const getListOfProjects = async (req, res) => {
     try {
-        const { skip, take } = projects_schema_1.getProjectsQuerySchema.parse(req.query);
+        const { skip, take, status } = projects_schema_1.getProjectsQuerySchema.parse(req.query);
         const result = req.userRole === prisma_1.Role.ADMIN
-            ? await projectService.getAllProjects(skip, take)
-            : await projectService.getProjectsByUser(req.userId, skip, take);
+            ? await projectService.getAllProjects(skip, take, status)
+            : await projectService.getProjectsByUser(req.userId, skip, take, status);
         return res.json({
             data: result.projects,
             total: result.total,

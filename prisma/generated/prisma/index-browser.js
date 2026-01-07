@@ -146,6 +146,7 @@ exports.Prisma.WorkLogScalarFieldEnum = {
   date: 'date',
   hours: 'hours',
   activity: 'activity',
+  isApproved: 'isApproved',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -170,7 +171,11 @@ exports.Role = exports.$Enums.Role = {
 };
 
 exports.ProjectStatus = exports.$Enums.ProjectStatus = {
+  PLANNED: 'PLANNED',
   INPROGRESS: 'INPROGRESS',
+  ONHOLD: 'ONHOLD',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
   SUPPORT: 'SUPPORT'
 };
 
