@@ -9,13 +9,14 @@ import { validate } from "../middlewares/validate";
 import {
   createProjectSchema,
   addUserToProjectSchema,
+  getProjectsQuerySchema,
 } from "../schemas/projects.schema";
 import { requireAuth } from "../middlewares/auth";
 import { isAdmin } from "../middlewares/isAdmin";
 
 const router = Router();
 
-router.get("/", requireAuth, getListOfProjects);
+router.get("/", [requireAuth], getListOfProjects);
 
 router.get("/:projectId", requireAuth, getProjectById);
 

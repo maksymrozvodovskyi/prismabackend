@@ -1,5 +1,8 @@
 import { prisma } from "../prisma";
-import { CreateProjectDto } from "../schemas/projects.schema";
+import {
+  CreateProjectDto,
+  GetProjectsFiltersDto,
+} from "../schemas/projects.schema";
 
 export const createProject = (data: CreateProjectDto, userId: string) => {
   return prisma.project.create({
@@ -44,23 +47,53 @@ export const getProjectById = (projectId: string, userId: string) => {
   });
 };
 
-export const getAllProjects = () => {
-  return prisma.project.findMany({
-    include: {
-      users: {
-        select: { id: true, email: true, name: true, role: true },
+export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
+  const { skip = 0, take = 20, status } = filters;
+  const where = status ? { status } : {};
+
+  const [projects, total] = await prisma.$transaction([
+    prisma.project.findMany({
+      skip,
+      take,
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        users: {
+          select: { id: true, email: true, name: true, role: true },
+        },
       },
-    },
-  });
+    }),
+    prisma.project.count({ where }),
+  ]);
+
+  return { projects, total };
 };
 
-export const getProjectsByUser = (userId: string) => {
-  return prisma.project.findMany({
-    where: { users: { some: { id: userId } } },
-    include: {
-      users: {
-        select: { id: true, email: true, name: true, role: true },
+export const getProjectsByUser = async (
+  userId: string,
+  filters: GetProjectsFiltersDto
+) => {
+  const { skip = 0, take = 20, status } = filters;
+  const where: any = { users: { some: { id: userId } } };
+
+  if (status) {
+    where.status = status;
+  }
+
+  const [projects, total] = await prisma.$transaction([
+    prisma.project.findMany({
+      skip,
+      take,
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        users: {
+          select: { id: true, email: true, name: true, role: true },
+        },
       },
-    },
-  });
+    }),
+    prisma.project.count({ where }),
+  ]);
+
+  return { projects, total };
 };
