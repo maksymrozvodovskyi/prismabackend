@@ -4,11 +4,13 @@ import {
   addUserToProject,
   getProjectById,
   getListOfProjects,
+  updateProject,
 } from "../controllers/projects.controller";
 import { validate } from "../middlewares/validate";
 import {
   createProjectSchema,
   addUserToProjectSchema,
+  updateProjectSchema,
   getProjectsQuerySchema,
 } from "../schemas/projects.schema";
 import { requireAuth } from "../middlewares/auth";
@@ -30,6 +32,12 @@ router.post(
   "/:projectId/users",
   [requireAuth, isAdmin, validate(addUserToProjectSchema)],
   addUserToProject
+);
+
+router.put(
+  "/:projectId",
+  [requireAuth, isAdmin, validate(updateProjectSchema)],
+  updateProject
 );
 
 export default router;

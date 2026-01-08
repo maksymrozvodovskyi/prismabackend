@@ -11,6 +11,12 @@ export const addUserToProjectSchema = z.object({
   userId: z.string().cuid(),
 });
 
+export const updateProjectSchema = z.object({
+  name: z.string().min(1, "Name is required").optional(),
+  description: z.string().optional(),
+  status: z.nativeEnum(ProjectStatus).optional(),
+});
+
 export const getProjectsQuerySchema = z.object({
   skip: z.coerce.number().int().min(0).default(0),
   take: z.coerce.number().int().min(1).max(100).default(20),
@@ -19,4 +25,5 @@ export const getProjectsQuerySchema = z.object({
 
 export type CreateProjectDto = z.infer<typeof createProjectSchema>;
 export type AddUserToProjectDto = z.infer<typeof addUserToProjectSchema>;
+export type UpdateProjectDto = z.infer<typeof updateProjectSchema>;
 export type GetProjectsFiltersDto = z.infer<typeof getProjectsQuerySchema>;

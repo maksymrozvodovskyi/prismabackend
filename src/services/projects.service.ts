@@ -1,6 +1,7 @@
 import { prisma } from "../prisma";
 import {
   CreateProjectDto,
+  UpdateProjectDto,
   GetProjectsFiltersDto,
 } from "../schemas/projects.schema";
 
@@ -23,6 +24,26 @@ export const addUserToProject = (projectId: string, userId: string) => {
         connect: { id: userId },
       },
     },
+    include: {
+      users: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+        },
+      },
+    },
+  });
+};
+
+export const updateProject = async (
+  projectId: string,
+  data: UpdateProjectDto
+) => {
+  return prisma.project.update({
+    where: { id: projectId },
+    data,
     include: {
       users: {
         select: {
