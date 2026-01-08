@@ -69,15 +69,35 @@ export const getProjectById = (projectId: string, userId: string) => {
 };
 
 export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
-  const { skip = 0, take = 20, status } = filters;
-  const where = status ? { status } : {};
+  const {
+    skip = 0,
+    take = 20,
+    status,
+    sortField = "createdAt",
+    sortDirection = "desc",
+    search,
+  } = filters;
+
+  const where: any = {};
+  if (status) {
+    where.status = status;
+  }
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  const orderBy: Record<string, "asc" | "desc"> = {};
+  orderBy[sortField] = sortDirection;
 
   const [projects, total] = await prisma.$transaction([
     prisma.project.findMany({
       skip,
       take,
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       include: {
         users: {
           select: { id: true, email: true, name: true, role: true },
@@ -94,19 +114,35 @@ export const getProjectsByUser = async (
   userId: string,
   filters: GetProjectsFiltersDto
 ) => {
-  const { skip = 0, take = 20, status } = filters;
+  const {
+    skip = 0,
+    take = 20,
+    status,
+    sortField = "createdAt",
+    sortDirection = "desc",
+    search,
+  } = filters;
   const where: any = { users: { some: { id: userId } } };
 
   if (status) {
     where.status = status;
   }
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  const orderBy: Record<string, "asc" | "desc"> = {};
+  orderBy[sortField] = sortDirection;
 
   const [projects, total] = await prisma.$transaction([
     prisma.project.findMany({
       skip,
       take,
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       include: {
         users: {
           select: { id: true, email: true, name: true, role: true },
