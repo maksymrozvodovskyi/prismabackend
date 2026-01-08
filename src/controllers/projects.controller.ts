@@ -3,6 +3,7 @@ import * as projectService from "../services/projects.service";
 import {
   CreateProjectDto,
   AddUserToProjectDto,
+  UpdateProjectDto,
   getProjectsQuerySchema,
 } from "../schemas/projects.schema";
 import { AuthRequest } from "../middlewares/auth";
@@ -77,6 +78,25 @@ export const getListOfProjects = async (req: AuthRequest, res: Response) => {
       data: result.projects,
       total: result.total,
     });
+  } catch {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const updateProject = async (req: AuthRequest, res: Response) => {
+  const { projectId } = req.params;
+
+  if (!projectId) {
+    return res.status(400).json({ message: "ProjectId required" });
+  }
+
+  try {
+    const project = await projectService.updateProject(
+      projectId,
+      req.body as UpdateProjectDto
+    );
+
+    return res.json(project);
   } catch {
     return res.status(500).json({ message: "Internal server error" });
   }
