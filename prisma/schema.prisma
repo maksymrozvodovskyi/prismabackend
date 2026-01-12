@@ -28,14 +28,23 @@ enum ActivityType {
   VACATION
 }
 
+enum UserStatus {
+  RED
+  YELLOW
+  GREEN
+  CLEAN
+  ARCHIVED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
   name      String
   role      Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status    UserStatus @default(GREEN)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   projects  Project[]
   workLogs  WorkLog[]

@@ -1,5 +1,5 @@
 import { prisma } from "../prisma";
-import { Role } from "../../prisma/generated/prisma";
+import { Role, UserStatus } from "../../prisma/generated/prisma/index";
 import bcrypt from "bcrypt";
 
 export type CreateUserInput = {
@@ -7,6 +7,7 @@ export type CreateUserInput = {
   password: string;
   name: string;
   role: Role;
+  status?: UserStatus;
 };
 
 type DateFilter = {
@@ -35,20 +36,48 @@ export const createUser = async (data: CreateUserInput) => {
       name: data.name,
       role: data.role,
       password: hashedPassword,
+      ...(data.status && { status: data.status }),
     },
   });
 };
 
 export const getUsers = ({
   sortOrder,
-}: { sortOrder?: "asc" | "desc" } = {}) => {
+  name,
+  role,
+  status,
+}: {
+  sortOrder?: "asc" | "desc";
+  name?: string;
+  role?: Role;
+  status?: UserStatus;
+} = {}) => {
+  const whereConditions: any = {};
+
+  if (name) {
+    whereConditions.name = {
+      contains: name,
+      mode: "insensitive",
+    };
+  }
+
+  if (role) {
+    whereConditions.role = role;
+  }
+
+  if (status) {
+    whereConditions.status = status;
+  }
+
   return prisma.user.findMany({
+    ...(Object.keys(whereConditions).length > 0 && { where: whereConditions }),
     ...(sortOrder && { orderBy: { name: sortOrder } }),
     select: {
       id: true,
       email: true,
       name: true,
       role: true,
+      status: true,
       createdAt: true,
       projects: {
         select: {
