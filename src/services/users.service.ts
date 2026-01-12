@@ -41,13 +41,19 @@ export const createUser = async (data: CreateUserInput) => {
   });
 };
 
-export const getUsers = ({
+export const getUsers = async ({
+  skip = 0,
+  take = 20,
   sortOrder,
+  sortField = "name",
   name,
   role,
   status,
 }: {
+  skip?: number;
+  take?: number;
   sortOrder?: "asc" | "desc";
+  sortField?: "name" | "email" | "createdAt" | "role" | "status";
   name?: string;
   role?: Role;
   status?: UserStatus;
@@ -69,27 +75,39 @@ export const getUsers = ({
     whereConditions.status = status;
   }
 
-  return prisma.user.findMany({
-    ...(Object.keys(whereConditions).length > 0 && { where: whereConditions }),
-    ...(sortOrder && { orderBy: { name: sortOrder } }),
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      status: true,
-      createdAt: true,
-      projects: {
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          status: true,
-          createdAt: true,
+  const orderBy: Record<string, "asc" | "desc"> = {};
+  orderBy[sortField] = sortOrder || "asc";
+
+  const [users, total] = await prisma.$transaction([
+    prisma.user.findMany({
+      skip,
+      take,
+      ...(Object.keys(whereConditions).length > 0 && {
+        where: whereConditions,
+      }),
+      orderBy,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        projects: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            status: true,
+            createdAt: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.user.count({ where: whereConditions }),
+  ]);
+
+  return { users, total };
 };
 
 export const getUserDetails = async (

@@ -31,13 +31,19 @@ export const getUsers = async (
 ) => {
   try {
     const query = getUsersQuerySchema.parse(req.query) as any;
-    const users = await userService.getUsers({
+    const result = await userService.getUsers({
+      skip: query.skip,
+      take: query.take,
       sortOrder: query.sortOrder,
+      sortField: query.sortField,
       name: query.name,
       role: query.userType,
       status: query.status,
     });
-    res.json(users);
+    res.json({
+      data: result.users,
+      total: result.total,
+    });
   } catch (err) {
     next(err);
   }
