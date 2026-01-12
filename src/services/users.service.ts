@@ -39,8 +39,11 @@ export const createUser = async (data: CreateUserInput) => {
   });
 };
 
-export const getUsers = () => {
+export const getUsers = ({
+  sortOrder,
+}: { sortOrder?: "asc" | "desc" } = {}) => {
   return prisma.user.findMany({
+    ...(sortOrder && { orderBy: { name: sortOrder } }),
     select: {
       id: true,
       email: true,
