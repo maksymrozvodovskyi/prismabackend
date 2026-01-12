@@ -5,7 +5,7 @@ import {
   getUsers,
 } from "../controllers/users.controller";
 import { validate } from "../middlewares/validate";
-import { createUserSchema } from "../schemas/user.schema";
+import { createUserSchema, getUsersQuerySchema } from "../schemas/user.schema";
 import { requireAuth } from "../middlewares/auth";
 import { isAdmin } from "../middlewares/isAdmin";
 
@@ -17,7 +17,11 @@ router.post(
   createUser
 );
 
-router.get("/", [requireAuth, isAdmin], getUsers);
+router.get(
+  "/",
+  [requireAuth, isAdmin, validate(getUsersQuerySchema, "query")],
+  getUsers
+);
 
 router.get("/:userId", requireAuth, isAdmin, getUserDetails);
 

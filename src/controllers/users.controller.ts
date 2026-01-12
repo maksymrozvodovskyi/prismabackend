@@ -1,6 +1,10 @@
 import { Response, NextFunction } from "express";
 import * as userService from "../services/users.service";
-import { CreateUserDto, dateQuerySchema } from "../schemas/user.schema";
+import {
+  CreateUserDto,
+  dateQuerySchema,
+  getUsersQuerySchema,
+} from "../schemas/user.schema";
 import { AuthRequest } from "../middlewares/auth";
 
 export const createUser = async (
@@ -20,12 +24,13 @@ export const createUser = async (
 };
 
 export const getUsers = async (
-  _req: AuthRequest,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const users = await userService.getUsers();
+    const { sortOrder } = getUsersQuerySchema.parse(req.query);
+    const users = await userService.getUsers({ sortOrder });
     res.json(users);
   } catch (err) {
     next(err);

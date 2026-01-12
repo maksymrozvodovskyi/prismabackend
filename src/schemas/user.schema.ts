@@ -13,5 +13,10 @@ export const dateQuerySchema = z.object({
   endDate: z.string().optional(),
 });
 
+export const getUsersQuerySchema = z.object({
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+});
+
 export type CreateUserDto = z.infer<typeof createUserSchema>;
 export type DateQueryDto = z.infer<typeof dateQuerySchema>;
+export type GetUsersQueryDto = z.infer<typeof getUsersQuerySchema>;
