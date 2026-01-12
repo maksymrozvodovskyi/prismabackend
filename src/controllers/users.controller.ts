@@ -4,6 +4,7 @@ import {
   CreateUserDto,
   dateQuerySchema,
   getUsersQuerySchema,
+  GetUsersQueryDto,
 } from "../schemas/user.schema";
 import { AuthRequest } from "../middlewares/auth";
 
@@ -29,8 +30,13 @@ export const getUsers = async (
   next: NextFunction
 ) => {
   try {
-    const { sortOrder } = getUsersQuerySchema.parse(req.query);
-    const users = await userService.getUsers({ sortOrder });
+    const query = getUsersQuerySchema.parse(req.query) as any;
+    const users = await userService.getUsers({
+      sortOrder: query.sortOrder,
+      name: query.name,
+      role: query.userType,
+      status: query.status,
+    });
     res.json(users);
   } catch (err) {
     next(err);
