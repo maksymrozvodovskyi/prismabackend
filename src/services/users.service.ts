@@ -47,6 +47,15 @@ export const getUsers = () => {
       name: true,
       role: true,
       createdAt: true,
+      projects: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          status: true,
+          createdAt: true,
+        },
+      },
     },
   });
 };
