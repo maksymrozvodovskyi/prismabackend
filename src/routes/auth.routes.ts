@@ -13,7 +13,7 @@ import {
   verifyResetCodeSchema,
   resetPasswordSchema,
 } from "../schemas/auth.schema";
-import { requireAuth } from "../middlewares/auth";
+import { requireAuth, requireResetToken } from "../middlewares/auth";
 
 const router = Router();
 
@@ -31,7 +31,7 @@ router.post(
 
 router.post(
   "/reset-password",
-  requireAuth,
+  requireResetToken,
   validate(resetPasswordSchema),
   resetPassword
 );

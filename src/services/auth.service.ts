@@ -1,6 +1,6 @@
 import { prisma } from "../prisma";
 import bcrypt from "bcrypt";
-import { getToken } from "../utils/jwt";
+import { getToken, getResetToken } from "../utils/jwt";
 import { sendPasswordResetCode } from "./email.service";
 
 export const login = async (email: string, password: string) => {
@@ -49,131 +49,62 @@ const generateResetCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-const cleanExpiredCodes = async () => {
-  await prisma.passwordResetCode.deleteMany({
-    where: {
-      expiresAt: {
-        lt: new Date(),
-      },
-    },
-  });
-};
-
 export const forgotPassword = async (email: string) => {
-  await cleanExpiredCodes();
-
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    return { message: "If user exists, code sent to email" };
+    throw new Error("User not found");
   }
 
-  await prisma.passwordResetCode.updateMany({
-    where: {
-      userId: user.id,
-      used: false,
-    },
+  const code = generateResetCode();
+
+  await prisma.user.update({
+    where: { id: user.id },
     data: {
-      used: true,
-    },
-  });
-
-  let code: string;
-  let isUnique = false;
-  let attempts = 0;
-  const maxAttempts = 10;
-
-  while (!isUnique && attempts < maxAttempts) {
-    code = generateResetCode();
-    const existing = await prisma.passwordResetCode.findFirst({
-      where: {
-        code,
-        used: false,
-        expiresAt: {
-          gt: new Date(),
-        },
-      },
-    });
-
-    if (!existing) {
-      isUnique = true;
-    } else {
-      attempts++;
-    }
-  }
-
-  if (!isUnique) {
-    throw new Error("Failed to generate unique reset code");
-  }
-
-  const expiresAt = new Date();
-  expiresAt.setMinutes(expiresAt.getMinutes() + 15);
-
-  await prisma.passwordResetCode.create({
-    data: {
-      userId: user.id,
-      code: code!,
-      expiresAt,
+      ot_code: code,
     },
   });
 
   try {
-    await sendPasswordResetCode(email, code!);
+    await sendPasswordResetCode(email, code);
   } catch (error) {
-    await prisma.passwordResetCode.deleteMany({
-      where: {
-        userId: user.id,
-        code: code!,
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ot_code: null,
       },
     });
     throw error;
   }
 
-  return { message: "If user exists, code sent to email" };
+  return { message: "Code sent to email" };
 };
 
 export const verifyResetCode = async (email: string, code: string) => {
-  await cleanExpiredCodes();
-
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (!user.ot_code) {
+    throw new Error("No reset code found for this user");
+  }
+
+  if (user.ot_code !== code) {
     throw new Error("Invalid code");
   }
 
-  const resetCode = await prisma.passwordResetCode.findFirst({
-    where: {
-      userId: user.id,
-      used: false,
-      expiresAt: {
-        gt: new Date(),
-      },
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      ot_code: null,
     },
-    orderBy: {
-      createdAt: "desc",
-    },
   });
 
-  if (!resetCode) {
-    throw new Error("Invalid code");
-  }
+  const resetToken = getResetToken(user.id);
 
-  if (resetCode.code !== code) {
-    throw new Error("Invalid code");
-  }
-
-  await prisma.passwordResetCode.update({
-    where: { id: resetCode.id },
-    data: { used: true },
-  });
-
-  const accessToken = getToken({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  });
-
-  return { accessToken };
+  return { resetToken };
 };
 
 export const resetPassword = async (userId: string, newPassword: string) => {
@@ -181,7 +112,10 @@ export const resetPassword = async (userId: string, newPassword: string) => {
 
   await prisma.user.update({
     where: { id: userId },
-    data: { password: hashedPassword },
+    data: {
+      password: hashedPassword,
+      ot_code: null,
+    },
   });
 
   return { message: "Password updated successfully" };

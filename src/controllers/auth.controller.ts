@@ -6,8 +6,7 @@ import {
   VerifyResetCodeDto,
   ResetPasswordDto,
 } from "../schemas/auth.schema";
-import { AuthRequest, addTokenToBlacklist } from "../middlewares/auth";
-import jwt from "jsonwebtoken";
+import { AuthRequest } from "../middlewares/auth";
 
 export const login = async (
   req: Request,
@@ -48,7 +47,10 @@ export const forgotPassword = async (
   try {
     const result = await authService.forgotPassword(email);
     res.json(result);
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message === "User not found") {
+      return res.status(404).json({ message: "User not found" });
+    }
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -77,19 +79,9 @@ export const resetPassword = async (
   next: NextFunction
 ) => {
   const { newPassword } = req.body as ResetPasswordDto;
-  const token = req.get("authorization")?.split(" ")[1];
 
   try {
     const result = await authService.resetPassword(req.userId!, newPassword);
-
-    if (token) {
-      const decoded = jwt.decode(token) as { exp?: number } | null;
-      if (decoded?.exp) {
-        const expiresAt = new Date(decoded.exp * 1000);
-        await addTokenToBlacklist(token, expiresAt);
-      }
-    }
-
     res.json(result);
   } catch (err) {
     return res.status(500).json({ message: "Internal server error" });
