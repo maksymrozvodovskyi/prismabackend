@@ -113,7 +113,6 @@ export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
 
     return res.json(result);
   } catch (error) {
-    console.error("Error fetching work logs:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

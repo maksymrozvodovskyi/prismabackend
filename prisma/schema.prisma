@@ -18,6 +18,7 @@ enum ProjectStatus {
   ONHOLD
   COMPLETED
   SUPPORT
+  CANCELLED
 }
 
 enum ActivityType {
@@ -37,17 +38,18 @@ enum UserStatus {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role
-  status    UserStatus @default(GREEN)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id           String     @id @default(cuid())
+  email        String     @unique
+  password     String
+  name         String
+  role         Role
+  status       UserStatus @default(GREEN)
+  ot_code      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  projects  Project[]
-  workLogs  WorkLog[]
+  projects Project[]
+  workLogs WorkLog[]
 }
 
 model Project {

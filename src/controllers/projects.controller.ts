@@ -32,7 +32,7 @@ export const addUserToProject = async (req: AuthRequest, res: Response) => {
   try {
     const project = await projectService.addUserToProject(
       projectId,
-      req.userId!
+      req.body.userId
     );
 
     if (!project) {

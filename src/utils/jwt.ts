@@ -9,6 +9,11 @@ export type JwtPayload = {
   role: Role;
 };
 
+export type ResetTokenPayload = {
+  id: string;
+  type: "password_reset";
+};
+
 export const getToken = (user: { id: string; email: string; role: Role }) => {
   const payload: JwtPayload = {
     id: user.id,
@@ -21,9 +26,32 @@ export const getToken = (user: { id: string; email: string; role: Role }) => {
   });
 };
 
+export const getResetToken = (userId: string) => {
+  const payload: ResetTokenPayload = {
+    id: userId,
+    type: "password_reset",
+  };
+
+  return jwt.sign(payload, SECRET_KEY, {
+    expiresIn: "15m",
+  });
+};
+
 export const verifyToken = (token: string): JwtPayload | null => {
   try {
     return jwt.verify(token, SECRET_KEY) as JwtPayload;
+  } catch {
+    return null;
+  }
+};
+
+export const verifyResetToken = (token: string): ResetTokenPayload | null => {
+  try {
+    const payload = jwt.verify(token, SECRET_KEY) as ResetTokenPayload;
+    if (payload.type !== "password_reset") {
+      return null;
+    }
+    return payload;
   } catch {
     return null;
   }
