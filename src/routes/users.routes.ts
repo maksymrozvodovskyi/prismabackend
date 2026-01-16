@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createUser,
   getUserDetails,
+  getUserProfile,
   getUsers,
 } from "../controllers/users.controller";
 import { validate } from "../middlewares/validate";
@@ -22,6 +23,8 @@ router.get(
   [requireAuth, isAdmin, validate(getUsersQuerySchema, "query")],
   getUsers
 );
+
+router.get("/:userId/profile", requireAuth, isAdmin, getUserProfile);
 
 router.get("/:userId", requireAuth, isAdmin, getUserDetails);
 

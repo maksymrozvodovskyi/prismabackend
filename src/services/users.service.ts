@@ -166,3 +166,30 @@ export const getUserDetails = async (
     projects,
   };
 };
+
+export const getUserProfile = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      status: true,
+      createdAt: true,
+      projects: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          status: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
+};

@@ -75,3 +75,17 @@ export const getUserDetails = async (
     next(err);
   }
 };
+
+export const getUserProfile = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId } = req.params;
+    const user = await userService.getUserProfile(userId);
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+};
