@@ -8,6 +8,11 @@ export type CreateUserInput = {
   name: string;
   role: Role;
   status?: UserStatus;
+  skype?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string | Date;
+  location?: string;
+  skills?: string[];
 };
 
 type DateFilter = {
@@ -37,6 +42,15 @@ export const createUser = async (data: CreateUserInput) => {
       role: data.role,
       password: hashedPassword,
       ...(data.status && { status: data.status }),
+      ...(data.skype && { skype: data.skype }),
+      ...(data.phoneNumber && { phoneNumber: data.phoneNumber }),
+      ...(data.dateOfBirth && {
+        dateOfBirth: data.dateOfBirth instanceof Date
+          ? data.dateOfBirth
+          : new Date(data.dateOfBirth),
+      }),
+      ...(data.location && { location: data.location }),
+      ...(data.skills && { skills: data.skills }),
     },
   });
 };
@@ -92,6 +106,11 @@ export const getUsers = async ({
         name: true,
         role: true,
         status: true,
+        skype: true,
+        phoneNumber: true,
+        dateOfBirth: true,
+        location: true,
+        skills: true,
         createdAt: true,
         projects: {
           select: {
@@ -176,6 +195,11 @@ export const getUserProfile = async (userId: string) => {
       name: true,
       role: true,
       status: true,
+      skype: true,
+      phoneNumber: true,
+      dateOfBirth: true,
+      location: true,
+      skills: true,
       createdAt: true,
       projects: {
         select: {

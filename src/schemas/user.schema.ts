@@ -7,6 +7,11 @@ export const createUserSchema = z.object({
   name: z.string().min(1),
   role: z.nativeEnum(Role),
   status: z.nativeEnum(UserStatus).optional(),
+  skype: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  dateOfBirth: z.string().date().optional(),
+  location: z.string().optional(),
+  skills: z.array(z.string()).optional(),
 });
 
 export const dateQuerySchema = z.object({
