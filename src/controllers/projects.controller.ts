@@ -101,3 +101,23 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getUserProjects = async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "UserId required" });
+    }
+
+    const filters = getProjectsQuerySchema.parse(req.query);
+    const result = await projectService.getProjectsByUser(userId, filters);
+
+    return res.json({
+      data: result.projects,
+      total: result.total,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

@@ -5,6 +5,7 @@ import {
   getProjectById,
   getListOfProjects,
   updateProject,
+  getUserProjects,
 } from "../controllers/projects.controller";
 import { validate } from "../middlewares/validate";
 import {
@@ -19,6 +20,15 @@ import { isAdmin } from "../middlewares/isAdmin";
 const router = Router();
 
 router.get("/", [requireAuth], getListOfProjects);
+
+router.get(
+  "/user/:userId",
+  [
+    requireAuth,
+    validate(getProjectsQuerySchema, "query"),
+  ],
+  getUserProjects
+);
 
 router.get("/:projectId", requireAuth, getProjectById);
 
