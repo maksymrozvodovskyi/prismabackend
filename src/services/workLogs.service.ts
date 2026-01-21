@@ -4,8 +4,9 @@ import { CreateWorkLogDto } from "../schemas/workLogs.schema";
 
 export const createWorkLog = async (userId: string, data: CreateWorkLogDto) => {
   const isSickLeave = data.activity === ActivityType.SICKLEAVE;
+  const isVacation = data.activity === ActivityType.VACATION;
 
-  const hours = isSickLeave ? 0 : data.hours;
+  const hours = isSickLeave || isVacation ? 0 : data.hours;
 
   const isMember = await prisma.project.findFirst({
     where: {
@@ -31,6 +32,20 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDto) => {
 
     if (existingWorkLog) {
       throw new Error("Cannot add sick leave on a working day");
+    }
+  }
+
+  if (isVacation) {
+    const existingWorkLog = await prisma.workLog.findFirst({
+      where: {
+        userId,
+        date: new Date(data.date),
+        hours: { gt: 0 },
+      },
+    });
+
+    if (existingWorkLog) {
+      throw new Error("Cannot add vacation on a working day");
     }
   }
 
@@ -96,9 +111,18 @@ export const updateWorkLog = async (
   workLogId: string,
   data: Partial<CreateWorkLogDto>
 ) => {
+  const isSickLeave = data.activity === ActivityType.SICKLEAVE;
+  const isVacation = data.activity === ActivityType.VACATION;
+
+  const updateData: any = { ...data };
+
+  if (isSickLeave || isVacation) {
+    updateData.hours = 0;
+  }
+
   return prisma.workLog.update({
     where: { id: workLogId },
-    data,
+    data: updateData,
   });
 };
 

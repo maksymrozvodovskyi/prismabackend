@@ -86,10 +86,7 @@ export const updateWorkLog = async (
 
     if (req.body.activity !== undefined) data.activity = req.body.activity;
 
-    const updatedLog = await prisma.workLog.update({
-      where: { id: workLogId },
-      data,
-    });
+    const updatedLog = await workLogService.updateWorkLog(workLogId, data);
 
     res.json(updatedLog);
   } catch (err) {
