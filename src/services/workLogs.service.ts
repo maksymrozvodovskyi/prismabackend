@@ -130,6 +130,7 @@ export const getWorkLogsByUserId = async (
   userId: string,
   startDate: Date,
   endDate: Date,
+  type?: ActivityType,
   sortOrder: "asc" | "desc" = "asc"
 ) => {
 
@@ -143,6 +144,7 @@ export const getWorkLogsByUserId = async (
         gte: start,
         lte: end,
       },
+      ...(type && { activity: type }),
     },
     include: {
       project: {

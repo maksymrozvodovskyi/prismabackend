@@ -98,13 +98,14 @@ export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
 
-    const { startDate, endDate, sortOrder } =
+    const { startDate, endDate, type, sortOrder } =
       req.query as GetWorkLogsByTimeQuery;
 
     const result = await workLogService.getWorkLogsByUserId(
       userId,
       new Date(startDate),
       new Date(endDate),
+      type,
       sortOrder ?? "asc"
     );
 

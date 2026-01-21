@@ -23,6 +23,7 @@ export const getWorkLogsByTimeSchema = z.object({
   endDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid date format",
   }),
+  type: z.nativeEnum(ActivityType).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
 });
 
