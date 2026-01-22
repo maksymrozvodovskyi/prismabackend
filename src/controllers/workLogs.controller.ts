@@ -15,8 +15,8 @@ export const createWorkLog = async (req: AuthRequest, res: Response) => {
     const workLog = await workLogService.createWorkLog(req.userId!, dto);
 
     return res.status(201).json(workLog);
-  } catch (err) {
-    return res.status(500).json({ message: "Internal server error" });
+  } catch (err: any) {
+    return res.status(500).json({ message: err.message });
   }
 };
 
@@ -101,11 +101,13 @@ export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
     const { startDate, endDate, type, sortOrder } =
       req.query as GetWorkLogsByTimeQuery;
 
+    const typeFilter = type;
+
     const result = await workLogService.getWorkLogsByUserId(
       userId,
-      new Date(startDate),
-      new Date(endDate),
-      type,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+      typeFilter,
       sortOrder ?? "asc"
     );
 

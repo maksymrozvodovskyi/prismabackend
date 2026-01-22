@@ -4,6 +4,7 @@ import { ActivityType } from "../../prisma/generated/prisma";
 export const createWorkLogSchema = z.object({
   projectId: z.string().cuid(),
   date: z.string().date(),
+  endDate: z.string().date().optional(),
   hours: z.number().nonnegative(),
   activity: z.nativeEnum(ActivityType),
 });
@@ -19,11 +20,14 @@ export const updateWorkLogSchema = z
 export const getWorkLogsByTimeSchema = z.object({
   startDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid date format",
-  }),
+  }).optional(),
   endDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid date format",
-  }),
-  type: z.nativeEnum(ActivityType).optional(),
+  }).optional(),
+  type: z.union([
+    z.nativeEnum(ActivityType),
+    z.array(z.nativeEnum(ActivityType)),
+  ]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
 });
 

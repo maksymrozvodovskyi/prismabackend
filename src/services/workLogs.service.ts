@@ -21,43 +21,52 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDto) => {
     throw new Error("Forbidden: user is not part of this project");
   }
 
-  if (isSickLeave) {
-    const existingWorkLog = await prisma.workLog.findFirst({
+  const startDate = new Date(data.date);
+  const endDate = data.endDate ? new Date(data.endDate) : startDate;
+
+  if (endDate < startDate) {
+    throw new Error("End date cannot be earlier than start date");
+  }
+
+  const dates: Date[] = [];
+  const currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    dates.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  if (isSickLeave || isVacation) {
+    const existingWorkLogs = await prisma.workLog.findMany({
       where: {
         userId,
-        date: new Date(data.date),
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
         hours: { gt: 0 },
       },
     });
 
-    if (existingWorkLog) {
-      throw new Error("Cannot add sick leave on a working day");
+    if (existingWorkLogs.length > 0) {
+      throw new Error("Cannot add vacation/sick leave on days with working hours");
     }
   }
 
-  if (isVacation) {
-    const existingWorkLog = await prisma.workLog.findFirst({
-      where: {
-        userId,
-        date: new Date(data.date),
-        hours: { gt: 0 },
-      },
-    });
+  const workLogs = await prisma.$transaction(
+    dates.map((date) =>
+      prisma.workLog.create({
+        data: {
+          userId,
+          projectId: data.projectId,
+          date,
+          hours,
+          activity: data.activity,
+        },
+      })
+    )
+  );
 
-    if (existingWorkLog) {
-      throw new Error("Cannot add vacation on a working day");
-    }
-  }
-
-  return prisma.workLog.create({
-    data: {
-      userId,
-      projectId: data.projectId,
-      date: new Date(data.date),
-      hours,
-      activity: data.activity,
-    },
-  });
+  return workLogs.length === 1 ? workLogs[0] : workLogs;
 };
 
 export const getWorkLogsByProject = async (
@@ -128,23 +137,29 @@ export const updateWorkLog = async (
 
 export const getWorkLogsByUserId = async (
   userId: string,
-  startDate: Date,
-  endDate: Date,
-  type?: ActivityType,
+  startDate?: Date,
+  endDate?: Date,
+  type?: ActivityType | ActivityType[],
   sortOrder: "asc" | "desc" = "asc"
 ) => {
 
-  const start = startDate instanceof Date ? startDate : new Date(startDate);
-  const end = endDate instanceof Date ? endDate : new Date(endDate);
+  const start = startDate ? (startDate instanceof Date ? startDate : new Date(startDate)) : undefined;
+  const end = endDate ? (endDate instanceof Date ? endDate : new Date(endDate)) : undefined;
 
   const logs = await prisma.workLog.findMany({
     where: {
       userId,
-      date: {
-        gte: start,
-        lte: end,
-      },
-      ...(type && { activity: type }),
+      ...(start && end && {
+        date: {
+          gte: start,
+          lte: end,
+        },
+      }),
+      ...(type && {
+        activity: Array.isArray(type) 
+          ? { in: type }
+          : type
+      }),
     },
     include: {
       project: {
