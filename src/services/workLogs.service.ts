@@ -55,13 +55,13 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDto) => {
   const workLogs = await prisma.$transaction(
     dates.map((date) =>
       prisma.workLog.create({
-        data: {
-          userId,
-          projectId: data.projectId,
+    data: {
+      userId,
+      projectId: data.projectId,
           date,
-          hours,
-          activity: data.activity,
-        },
+      hours,
+      activity: data.activity,
+    },
       })
     )
   );
@@ -150,10 +150,10 @@ export const getWorkLogsByUserId = async (
     where: {
       userId,
       ...(start && end && {
-        date: {
-          gte: start,
-          lte: end,
-        },
+      date: {
+        gte: start,
+        lte: end,
+      },
       }),
       ...(type && {
         activity: Array.isArray(type) 
