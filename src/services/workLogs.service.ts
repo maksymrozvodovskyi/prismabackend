@@ -1,24 +1,26 @@
 import { ActivityType } from "../../prisma/generated/prisma";
 import { prisma } from "../prisma";
-import { CreateWorkLogDto } from "../schemas/workLogs.schema";
+import { CreateWorkLogDtoType } from "../schemas/workLogs.schema";
 
-export const createWorkLog = async (userId: string, data: CreateWorkLogDto) => {
+export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) => {
   const isSickLeave = data.activity === ActivityType.SICKLEAVE;
   const isVacation = data.activity === ActivityType.VACATION;
 
   const hours = isSickLeave || isVacation ? 0 : data.hours;
 
-  const isMember = await prisma.project.findFirst({
-    where: {
-      id: data.projectId,
-      users: {
-        some: { id: userId },
+  if (data.projectId && !isSickLeave && !isVacation) {
+    const isMember = await prisma.project.findFirst({
+      where: {
+        id: data.projectId,
+        users: {
+          some: { id: userId },
+        },
       },
-    },
-  });
+    });
 
-  if (!isMember) {
-    throw new Error("Forbidden: user is not part of this project");
+    if (!isMember) {
+      throw new Error("Forbidden: user is not part of this project");
+    }
   }
 
   const startDate = new Date(data.date);
@@ -52,13 +54,32 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDto) => {
     }
   }
 
+  if (!isSickLeave && !isVacation) {
+    const existingVacationSickLeave = await prisma.workLog.findMany({
+      where: {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        activity: {
+          in: [ActivityType.VACATION, ActivityType.SICKLEAVE],
+        },
+      },
+    });
+
+    if (existingVacationSickLeave.length > 0) {
+      throw new Error("Cannot add work activities on days with vacation or sick leave");
+    }
+  }
+
   const workLogs = await prisma.$transaction(
     dates.map((date) =>
       prisma.workLog.create({
     data: {
       userId,
-      projectId: data.projectId,
-          date,
+      projectId: isSickLeave || isVacation ? null : (data.projectId ?? null),
+      date,
       hours,
       activity: data.activity,
     },
@@ -118,15 +139,39 @@ export const getWorkLogsByUser = async (userId: string) => {
 
 export const updateWorkLog = async (
   workLogId: string,
-  data: Partial<CreateWorkLogDto>
+  data: Partial<CreateWorkLogDtoType>
 ) => {
   const isSickLeave = data.activity === ActivityType.SICKLEAVE;
   const isVacation = data.activity === ActivityType.VACATION;
+
+  if (data.activity && !isSickLeave && !isVacation) {
+    const existingLog = await prisma.workLog.findUnique({
+      where: { id: workLogId },
+    });
+
+    if (existingLog) {
+      const existingVacationSickLeave = await prisma.workLog.findMany({
+        where: {
+          userId: existingLog.userId,
+          date: existingLog.date,
+          activity: {
+            in: [ActivityType.VACATION, ActivityType.SICKLEAVE],
+          },
+          id: { not: workLogId },
+        },
+      });
+
+      if (existingVacationSickLeave.length > 0) {
+        throw new Error("Cannot add work activities on days with vacation or sick leave");
+      }
+    }
+  }
 
   const updateData: any = { ...data };
 
   if (isSickLeave || isVacation) {
     updateData.hours = 0;
+    updateData.projectId = null;
   }
 
   return prisma.workLog.update({
@@ -172,18 +217,25 @@ export const getWorkLogsByUserId = async (
   const projectsMap: Record<
     string,
     {
-      project: { id: string; name: string };
+      project: { id: string; name: string } | null;
       totalHours: number;
       logs: typeof logs;
     }
   > = {};
 
+  const vacationAndSickLeaveLogs: typeof logs = [];
+
   let totalUserHours = 0;
 
   logs.forEach((log) => {
-    const projectId = log.project.id;
     totalUserHours += log.hours;
 
+    if (!log.projectId || !log.project) {
+      vacationAndSickLeaveLogs.push(log);
+      return;
+    }
+
+    const projectId = log.project.id;
     if (!projectsMap[projectId]) {
       projectsMap[projectId] = {
         project: log.project,
@@ -196,9 +248,23 @@ export const getWorkLogsByUserId = async (
     projectsMap[projectId].logs.push(log);
   });
 
+  const projects = Object.values(projectsMap);
+
+  if (vacationAndSickLeaveLogs.length > 0) {
+    const vacationSickLeaveHours = vacationAndSickLeaveLogs.reduce(
+      (sum, log) => sum + log.hours,
+      0
+    );
+    projects.push({
+      project: null,
+      totalHours: vacationSickLeaveHours,
+      logs: vacationAndSickLeaveLogs,
+    });
+  }
+
   return {
     userId,
     totalUserHours,
-    projects: Object.values(projectsMap),
+    projects,
   };
 };

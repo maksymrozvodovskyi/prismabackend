@@ -1,6 +1,7 @@
 import { prisma } from "../prisma";
 import { Role, UserStatus } from "../../prisma/generated/prisma/index";
 import bcrypt from "bcrypt";
+import { Prisma } from "../../prisma/generated/prisma";
 
 export type CreateUserInput = {
   email: string;
@@ -89,6 +90,67 @@ export const getUsers = async ({
     whereConditions.status = status;
   }
 
+  const sortDirection = sortOrder || "asc";
+  
+  if (sortField === "name" || sortField === "email") {
+    const allUsers = await prisma.user.findMany({
+      where: Object.keys(whereConditions).length > 0 ? whereConditions : undefined,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        status: true,
+        skype: true,
+        phoneNumber: true,
+        dateOfBirth: true,
+        location: true,
+        skills: true,
+        createdAt: true,
+      },
+    });
+
+    allUsers.sort((a, b) => {
+      const aValue = a[sortField].toLowerCase();
+      const bValue = b[sortField].toLowerCase();
+      const comparison = aValue.localeCompare(bValue);
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    const paginatedUsers = allUsers.slice(skip, skip + take);
+
+    const usersWithProjects = await Promise.all(
+      paginatedUsers.map(async (user) => {
+        const projects = await prisma.project.findMany({
+          where: {
+            users: {
+              some: {
+                id: user.id,
+              },
+            },
+          },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            status: true,
+            createdAt: true,
+          },
+        });
+        return {
+          ...user,
+          projects,
+        };
+      })
+    );
+
+    const total = await prisma.user.count({
+      where: Object.keys(whereConditions).length > 0 ? whereConditions : undefined,
+    });
+
+    return { users: usersWithProjects, total };
+  }
+
   const orderBy: Record<string, "asc" | "desc"> = {};
   orderBy[sortField] = sortOrder || "asc";
 
@@ -127,63 +189,6 @@ export const getUsers = async ({
   ]);
 
   return { users, total };
-};
-
-export const getUserDetails = async (
-  userId: string,
-  { startDate, endDate }: DateFilter
-) => {
-  const dateFilter = {
-    ...(startDate || endDate
-      ? {
-          date: {
-            ...(startDate && { gte: new Date(startDate) }),
-            ...(endDate && { lte: new Date(endDate) }),
-          },
-        }
-      : {}),
-  };
-
-  const projects = await prisma.project.findMany({
-    where: {
-      workLogs: {
-        some: {
-          userId,
-          ...dateFilter,
-        },
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      workLogs: {
-        where: {
-          userId,
-          ...dateFilter,
-        },
-        select: {
-          id: true,
-          date: true,
-          hours: true,
-          activity: true,
-        },
-        orderBy: { date: "asc" },
-      },
-    },
-  });
-
-  const totalHours = projects.reduce(
-    (sum, project) =>
-      sum + project.workLogs.reduce((pSum, log) => pSum + log.hours, 0),
-    0
-  );
-
-  return {
-    userId,
-    totalHours,
-    projectsCount: projects.length,
-    projects,
-  };
 };
 
 export const getUserProfile = async (userId: string) => {

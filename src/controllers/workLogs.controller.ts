@@ -1,15 +1,15 @@
 import { Response, NextFunction } from "express";
 import * as workLogService from "../services/workLogs.service";
 import {
-  CreateWorkLogDto,
-  GetWorkLogsByTimeQuery,
-  UpdateWorkLogDto,
+  CreateWorkLogDtoType,
+  GetWorkLogsByTimeQueryType,
+  UpdateWorkLogDtoType,
 } from "../schemas/workLogs.schema";
 import { AuthRequest } from "../middlewares/auth";
 import { prisma } from "../prisma";
 
 export const createWorkLog = async (req: AuthRequest, res: Response) => {
-  const dto = req.body as CreateWorkLogDto;
+  const dto = req.body as CreateWorkLogDtoType;
 
   try {
     const workLog = await workLogService.createWorkLog(req.userId!, dto);
@@ -78,7 +78,7 @@ export const updateWorkLog = async (
         .json({ message: "Forbidden: cannot update others' work logs" });
     }
 
-    const data: Partial<UpdateWorkLogDto> = req.body;
+    const data: Partial<UpdateWorkLogDtoType> = req.body;
 
     if (req.body.date !== undefined) data.date = req.body.date;
 
@@ -99,7 +99,7 @@ export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
 
     const { startDate, endDate, type, sortOrder } =
-      req.query as GetWorkLogsByTimeQuery;
+      req.query as GetWorkLogsByTimeQueryType;
 
     const typeFilter = type;
 

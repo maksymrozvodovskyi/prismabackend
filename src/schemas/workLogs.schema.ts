@@ -2,12 +2,27 @@ import { z } from "zod";
 import { ActivityType } from "../../prisma/generated/prisma";
 
 export const createWorkLogSchema = z.object({
-  projectId: z.string().cuid(),
+  projectId: z.string().cuid().optional(),
   date: z.string().date(),
   endDate: z.string().date().optional(),
   hours: z.number().nonnegative(),
   activity: z.nativeEnum(ActivityType),
-});
+}).refine(
+  (data) => {
+    if (
+      data.activity === ActivityType.CODING ||
+      data.activity === ActivityType.REVIEW ||
+      data.activity === ActivityType.STUDING
+    ) {
+      return !!data.projectId;
+    }
+    return true;
+  },
+  {
+    message: "projectId is required for CODING, REVIEW, and STUDING activities",
+    path: ["projectId"],
+  }
+);
 
 export const updateWorkLogSchema = z
   .object({
@@ -35,7 +50,7 @@ export const userIdParamSchema = z.object({
   userId: z.string().cuid(),
 });
 
-export type CreateWorkLogDto = z.infer<typeof createWorkLogSchema>;
-export type UpdateWorkLogDto = z.infer<typeof updateWorkLogSchema>;
-export type GetWorkLogsByTimeQuery = z.infer<typeof getWorkLogsByTimeSchema>;
-export type UserIdParam = z.infer<typeof userIdParamSchema>;
+export type CreateWorkLogDtoType = z.infer<typeof createWorkLogSchema>;
+export type UpdateWorkLogDtoType = z.infer<typeof updateWorkLogSchema>;
+export type GetWorkLogsByTimeQueryType = z.infer<typeof getWorkLogsByTimeSchema>;
+export type UserIdParamType = z.infer<typeof userIdParamSchema>;

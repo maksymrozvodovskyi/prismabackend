@@ -65,10 +65,7 @@ export const getUserDetails = async (
         .json({ error: "startDate cannot be after endDate" });
     }
 
-    const data = await userService.getUserDetails(userId, {
-      startDate,
-      endDate,
-    });
+    const data = await userService.getUserProfile(userId);
 
     res.json(data);
   } catch (err) {

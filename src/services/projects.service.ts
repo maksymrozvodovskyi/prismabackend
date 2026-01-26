@@ -73,7 +73,7 @@ export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
     skip = 0,
     take = 20,
     status,
-    sortField = "createdAt",
+    sortField = "name",
     sortDirection = "desc",
     search,
   } = filters;
@@ -87,6 +87,29 @@ export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
       { name: { contains: search, mode: "insensitive" } },
       { description: { contains: search, mode: "insensitive" } },
     ];
+  }
+
+  if (sortField === "name") {
+    const allProjects = await prisma.project.findMany({
+      where,
+      include: {
+        users: {
+          select: { id: true, email: true, name: true, role: true },
+        },
+      },
+    });
+
+    allProjects.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const comparison = aName.localeCompare(bName, undefined, { sensitivity: "base" });
+      return sortDirection === "desc" ? -comparison : comparison;
+    });
+
+    const total = allProjects.length;
+    const projects = allProjects.slice(skip, skip + take);
+
+    return { projects, total };
   }
 
   const orderBy: Record<string, "asc" | "desc"> = {};
