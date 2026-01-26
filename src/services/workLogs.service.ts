@@ -73,6 +73,31 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
     }
   }
 
+  if (!isSickLeave && !isVacation && hours > 0) {
+    for (const date of dates) {
+      const normalizedDate = new Date(date);
+      normalizedDate.setHours(0, 0, 0, 0);
+
+      const existingWorkLogs = await prisma.workLog.findMany({
+        where: {
+          userId,
+          date: normalizedDate,
+          activity: {
+            notIn: [ActivityType.SICKLEAVE, ActivityType.VACATION],
+          },
+        },
+      });
+
+      const totalHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0) + hours;
+      
+      if (totalHours > 24) {
+        const dateStr = normalizedDate.toISOString().split('T')[0];
+        const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0);
+        throw new Error(`Total hours for ${dateStr} cannot exceed 24 hours. Existing: ${existingHours.toFixed(2)}h, Adding: ${hours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
+      }
+    }
+  }
+
   const workLogs = await prisma.$transaction(
     dates.map((date) =>
       prisma.workLog.create({
@@ -141,29 +166,31 @@ export const updateWorkLog = async (
   workLogId: string,
   data: Partial<CreateWorkLogDtoType>
 ) => {
+  const existingLog = await prisma.workLog.findUnique({
+    where: { id: workLogId },
+  });
+
+  if (!existingLog) {
+    throw new Error("WorkLog not found");
+  }
+
   const isSickLeave = data.activity === ActivityType.SICKLEAVE;
   const isVacation = data.activity === ActivityType.VACATION;
 
   if (data.activity && !isSickLeave && !isVacation) {
-    const existingLog = await prisma.workLog.findUnique({
-      where: { id: workLogId },
+    const existingVacationSickLeave = await prisma.workLog.findMany({
+      where: {
+        userId: existingLog.userId,
+        date: existingLog.date,
+        activity: {
+          in: [ActivityType.VACATION, ActivityType.SICKLEAVE],
+        },
+        id: { not: workLogId },
+      },
     });
 
-    if (existingLog) {
-      const existingVacationSickLeave = await prisma.workLog.findMany({
-        where: {
-          userId: existingLog.userId,
-          date: existingLog.date,
-          activity: {
-            in: [ActivityType.VACATION, ActivityType.SICKLEAVE],
-          },
-          id: { not: workLogId },
-        },
-      });
-
-      if (existingVacationSickLeave.length > 0) {
-        throw new Error("Cannot add work activities on days with vacation or sick leave");
-      }
+    if (existingVacationSickLeave.length > 0) {
+      throw new Error("Cannot add work activities on days with vacation or sick leave");
     }
   }
 
@@ -172,6 +199,35 @@ export const updateWorkLog = async (
   if (isSickLeave || isVacation) {
     updateData.hours = 0;
     updateData.projectId = null;
+  }
+
+  const targetDate = data.date ? new Date(data.date) : existingLog.date;
+  const newHours = data.hours !== undefined ? data.hours : existingLog.hours;
+  const willBeSickLeaveOrVacation = isSickLeave || isVacation || 
+    (existingLog.activity === ActivityType.SICKLEAVE || existingLog.activity === ActivityType.VACATION);
+
+  if (!willBeSickLeaveOrVacation && newHours > 0) {
+    const normalizedDate = new Date(targetDate);
+    normalizedDate.setHours(0, 0, 0, 0);
+
+    const existingWorkLogs = await prisma.workLog.findMany({
+      where: {
+        userId: existingLog.userId,
+        date: normalizedDate,
+        activity: {
+          notIn: [ActivityType.SICKLEAVE, ActivityType.VACATION],
+        },
+        id: { not: workLogId },
+      },
+    });
+
+    const totalHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0) + newHours;
+    
+    if (totalHours > 24) {
+      const dateStr = normalizedDate.toISOString().split('T')[0];
+      const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0);
+      throw new Error(`Total hours for ${dateStr} cannot exceed 24 hours. Existing: ${existingHours.toFixed(2)}h, Updating to: ${newHours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
+    }
   }
 
   return prisma.workLog.update({
