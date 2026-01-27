@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import pino from "pino-http";
 import { errorHandler } from "./middlewares/errorHandler";
 import { notFoundHandler } from "./middlewares/notFoundHandler";
 
@@ -10,8 +11,16 @@ import workLogRoutes from "./routes/workLogs.routes";
 
 export const app = express();
 
-app.use(cors());
 app.use(express.json());
+app.use(cors());
+
+app.use(
+  pino({
+    transport: {
+      target: 'pino-pretty',
+    },
+  }),
+);
 
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);

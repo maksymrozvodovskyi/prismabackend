@@ -8,19 +8,19 @@ import {
 import { AuthRequest } from "../middlewares/auth";
 import { prisma } from "../prisma";
 
-export const createWorkLog = async (req: AuthRequest, res: Response) => {
+export const createWorkLog = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const dto = req.body as CreateWorkLogDtoType;
 
   try {
     const workLog = await workLogService.createWorkLog(req.userId!, dto);
 
     return res.status(201).json(workLog);
-  } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const getWorkLogsByProject = async (req: AuthRequest, res: Response) => {
+export const getWorkLogsByProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { projectId } = req.params;
 
   if (!projectId) {
@@ -33,13 +33,13 @@ export const getWorkLogsByProject = async (req: AuthRequest, res: Response) => {
       projectId
     );
 
-    return res.json(logs);
+    return res.status(200).json(logs);
   } catch (err) {
-    return res.status(500).json({ message: "Internal server error" });
+    next(err);
   }
 };
 
-export const getWorkLogsByUser = async (req: AuthRequest, res: Response) => {
+export const getWorkLogsByUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { userId } = req.params;
 
   if (!userId) {
@@ -49,9 +49,9 @@ export const getWorkLogsByUser = async (req: AuthRequest, res: Response) => {
   try {
     const logs = await workLogService.getWorkLogsByUser(userId);
 
-    return res.json(logs);
+    return res.status(200).json(logs);
   } catch (err) {
-    return res.status(500).json({ message: "Internal server error" });
+    next(err);
   }
 };
 
@@ -88,13 +88,13 @@ export const updateWorkLog = async (
 
     const updatedLog = await workLogService.updateWorkLog(workLogId, data);
 
-    res.json(updatedLog);
+    res.status(200).json(updatedLog);
   } catch (err) {
     next(err);
   }
 };
 
-export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
+export const getWorkLogsByTime = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
 
@@ -111,8 +111,8 @@ export const getWorkLogsByTime = async (req: AuthRequest, res: Response) => {
       sortOrder ?? "asc"
     );
 
-    return res.json(result);
-  } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
   }
 };

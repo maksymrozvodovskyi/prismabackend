@@ -17,13 +17,13 @@ export const login = async (
 
   try {
     const result = await authService.login(email, password);
-    res.json(result);
+    res.status(200).json(result);
   } catch (err) {
-    return res.status(500).json({ message: "Internal server error" });
+    next(err);
   }
 };
 
-export const me = async (req: AuthRequest, res: Response) => {
+export const me = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = await authService.getMe(req.userId!);
 
@@ -31,9 +31,9 @@ export const me = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    return res.json({ user });
+    return res.status(200).json({ user });
   } catch (err) {
-    return res.status(500).json({ message: "Internal server error" });
+    next(err);
   }
 };
 
@@ -46,12 +46,9 @@ export const forgotPassword = async (
 
   try {
     const result = await authService.forgotPassword(email);
-    res.json(result);
-  } catch (err: any) {
-    if (err.message === "User not found") {
-      return res.status(404).json({ message: "User not found" });
-    }
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -64,12 +61,9 @@ export const verifyResetCode = async (
 
   try {
     const result = await authService.verifyResetCode(email, code);
-    res.json(result);
-  } catch (err: any) {
-    if (err.message === "Invalid code") {
-      return res.status(400).json({ message: "Invalid code" });
-    }
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -82,8 +76,8 @@ export const resetPassword = async (
 
   try {
     const result = await authService.resetPassword(req.userId!, newPassword);
-    res.json(result);
+    res.status(200).json(result);
   } catch (err) {
-    return res.status(500).json({ message: "Internal server error" });
+    next(err);
   }
 };

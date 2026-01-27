@@ -1,6 +1,7 @@
 import { ActivityType } from "../../prisma/generated/prisma";
 import { prisma } from "../prisma";
 import { CreateWorkLogDtoType } from "../schemas/workLogs.schema";
+import createHttpError from "http-errors";
 
 export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) => {
   const isSickLeave = data.activity === ActivityType.SICKLEAVE;
@@ -19,7 +20,7 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
     });
 
     if (!isMember) {
-      throw new Error("Forbidden: user is not part of this project");
+      throw createHttpError(403, "Forbidden: user is not part of this project");
     }
   }
 
@@ -27,7 +28,7 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
   const endDate = data.endDate ? new Date(data.endDate) : startDate;
 
   if (endDate < startDate) {
-    throw new Error("End date cannot be earlier than start date");
+    throw createHttpError(400, "End date cannot be earlier than start date");
   }
 
   const dates: Date[] = [];
@@ -50,7 +51,7 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
     });
 
     if (existingWorkLogs.length > 0) {
-      throw new Error("Cannot add vacation/sick leave on days with working hours");
+      throw createHttpError(400, "Cannot add vacation/sick leave on days with working hours");
     }
   }
 
@@ -69,7 +70,7 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
     });
 
     if (existingVacationSickLeave.length > 0) {
-      throw new Error("Cannot add work activities on days with vacation or sick leave");
+      throw createHttpError(400, "Cannot add work activities on days with vacation or sick leave");
     }
   }
 
@@ -93,7 +94,7 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
       if (totalHours > 24) {
         const dateStr = normalizedDate.toISOString().split('T')[0];
         const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0);
-        throw new Error(`Total hours for ${dateStr} cannot exceed 24 hours. Existing: ${existingHours.toFixed(2)}h, Adding: ${hours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
+        throw createHttpError(400, `Total hours for ${dateStr} cannot exceed 24 hours. Existing: ${existingHours.toFixed(2)}h, Adding: ${hours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
       }
     }
   }
@@ -129,7 +130,7 @@ export const getWorkLogsByProject = async (
   });
 
   if (!isMember) {
-    throw new Error("Forbidden");
+    throw createHttpError(403, "Forbidden");
   }
 
   return prisma.workLog.findMany({
@@ -171,7 +172,7 @@ export const updateWorkLog = async (
   });
 
   if (!existingLog) {
-    throw new Error("WorkLog not found");
+    throw createHttpError(404, "WorkLog not found");
   }
 
   const isSickLeave = data.activity === ActivityType.SICKLEAVE;
@@ -190,7 +191,7 @@ export const updateWorkLog = async (
     });
 
     if (existingVacationSickLeave.length > 0) {
-      throw new Error("Cannot add work activities on days with vacation or sick leave");
+      throw createHttpError(400, "Cannot add work activities on days with vacation or sick leave");
     }
   }
 
@@ -226,7 +227,7 @@ export const updateWorkLog = async (
     if (totalHours > 24) {
       const dateStr = normalizedDate.toISOString().split('T')[0];
       const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0);
-      throw new Error(`Total hours for ${dateStr} cannot exceed 24 hours. Existing: ${existingHours.toFixed(2)}h, Updating to: ${newHours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
+      throw createHttpError(400, `Total hours for ${dateStr} cannot exceed 24 hours. Existing: ${existingHours.toFixed(2)}h, Updating to: ${newHours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
     }
   }
 

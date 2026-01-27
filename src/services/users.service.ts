@@ -2,6 +2,7 @@ import { prisma } from "../prisma";
 import { Role, UserStatus } from "../../prisma/generated/prisma/index";
 import bcrypt from "bcrypt";
 import { Prisma } from "../../prisma/generated/prisma";
+import createHttpError from "http-errors";
 
 export type CreateUserInput = {
   email: string;
@@ -27,7 +28,7 @@ const assertUniqueUserEmail = async (email: string) => {
   });
 
   if (exists) {
-    throw new Error("User already exists");
+    throw createHttpError(409, "User already exists");
   }
 };
 
@@ -218,7 +219,7 @@ export const getUserProfile = async (userId: string) => {
     },
   });
   if (!user) {
-    throw new Error("User not found");
+    throw createHttpError(404, "User not found");
   }
   return user;
 };

@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Response, NextFunction } from "express";
 import * as projectService from "../services/projects.service";
 import {
   CreateProjectDto,
@@ -9,7 +9,7 @@ import {
 import { AuthRequest } from "../middlewares/auth";
 import { Role } from "../../prisma/generated/prisma";
 
-export const createProject = async (req: AuthRequest, res: Response) => {
+export const createProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const project = await projectService.createProject(
       req.body as CreateProjectDto,
@@ -17,12 +17,12 @@ export const createProject = async (req: AuthRequest, res: Response) => {
     );
 
     return res.status(201).json(project);
-  } catch {
-    return res.status(500).json({ message: "Internal server error" });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const addUserToProject = async (req: AuthRequest, res: Response) => {
+export const addUserToProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { projectId } = req.params;
 
   if (!projectId) {
@@ -39,13 +39,13 @@ export const addUserToProject = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    return res.json(project);
-  } catch {
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(200).json(project);
+  } catch (err) {
+    next(err);
   }
 };
 
-export const getProjectById = async (req: AuthRequest, res: Response) => {
+export const getProjectById = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { projectId } = req.params;
 
   if (!projectId) {
@@ -59,13 +59,13 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    return res.json(project);
-  } catch {
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(200).json(project);
+  } catch (err) {
+    next(err);
   }
 };
 
-export const getListOfProjects = async (req: AuthRequest, res: Response) => {
+export const getListOfProjects = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const filters = getProjectsQuerySchema.parse(req.query);
 
@@ -74,16 +74,16 @@ export const getListOfProjects = async (req: AuthRequest, res: Response) => {
         ? await projectService.getAllProjects(filters)
         : await projectService.getProjectsByUser(req.userId!, filters);
 
-    return res.json({
+    return res.status(200).json({
       data: result.projects,
       total: result.total,
     });
-  } catch {
-    return res.status(500).json({ message: "Internal server error" });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const updateProject = async (req: AuthRequest, res: Response) => {
+export const updateProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { projectId } = req.params;
 
   if (!projectId) {
@@ -96,13 +96,13 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
       req.body as UpdateProjectDto
     );
 
-    return res.json(project);
-  } catch {
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(200).json(project);
+  } catch (err) {
+    next(err);
   }
 };
 
-export const getUserProjects = async (req: AuthRequest, res: Response) => {
+export const getUserProjects = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
 
@@ -113,11 +113,11 @@ export const getUserProjects = async (req: AuthRequest, res: Response) => {
     const filters = getProjectsQuerySchema.parse(req.query);
     const result = await projectService.getProjectsByUser(userId, filters);
 
-    return res.json({
+    return res.status(200).json({
       data: result.projects,
       total: result.total,
     });
-  } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+  } catch (err) {
+    next(err);
   }
 };

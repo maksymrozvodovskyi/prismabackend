@@ -40,7 +40,7 @@ export const getUsers = async (
       role: query.userType,
       status: query.status,
     });
-    res.json({
+    res.status(200).json({
       data: result.users,
       total: result.total,
     });
@@ -67,7 +67,7 @@ export const getUserDetails = async (
 
     const data = await userService.getUserProfile(userId);
 
-    res.json(data);
+    res.status(200).json(data);
   } catch (err) {
     next(err);
   }
@@ -81,7 +81,7 @@ export const getUserProfile = async (
   try {
     const { userId } = req.params;
     const user = await userService.getUserProfile(userId);
-    res.json(user);
+    res.status(200).json(user);
   } catch (err) {
     next(err);
   }

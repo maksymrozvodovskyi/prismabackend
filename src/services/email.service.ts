@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import createHttpError from "http-errors";
 
 const GMAIL_USER = process.env.GMAIL_USER;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
@@ -25,7 +26,7 @@ export const sendPasswordResetCode = async (
   code: string
 ): Promise<void> => {
   if (!transporter) {
-    throw new Error("Email service is not configured");
+    throw createHttpError(500, "Email service is not configured");
   }
 
   try {
@@ -46,7 +47,8 @@ export const sendPasswordResetCode = async (
       `,
     });
   } catch (error: any) {
-    throw new Error(
+    throw createHttpError(
+      500,
       `Failed to send password reset code email: ${
         error?.message || String(error)
       }`

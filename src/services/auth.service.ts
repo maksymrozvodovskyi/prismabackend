@@ -2,17 +2,18 @@ import { prisma } from "../prisma";
 import bcrypt from "bcrypt";
 import { getToken, getResetToken } from "../utils/jwt";
 import { sendPasswordResetCode } from "./email.service";
+import createHttpError from "http-errors";
 
 export const login = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    throw new Error("Invalid credentials");
+    throw createHttpError(401, "Invalid credentials");
   }
 
   const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
-    throw new Error("Invalid credentials");
+    throw createHttpError(401, "Invalid credentials");
   }
 
   const accessToken = getToken({
@@ -53,7 +54,7 @@ export const forgotPassword = async (email: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    throw new Error("User not found");
+    throw createHttpError(404, "User not found");
   }
 
   const code = generateResetCode();
@@ -84,15 +85,15 @@ export const verifyResetCode = async (email: string, code: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    throw new Error("User not found");
+    throw createHttpError(404, "User not found");
   }
 
   if (!user.ot_code) {
-    throw new Error("No reset code found for this user");
+    throw createHttpError(400, "No reset code found for this user");
   }
 
   if (user.ot_code !== code) {
-    throw new Error("Invalid code");
+    throw createHttpError(400, "Invalid code");
   }
 
   await prisma.user.update({
