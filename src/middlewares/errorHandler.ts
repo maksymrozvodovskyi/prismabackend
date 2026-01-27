@@ -6,7 +6,5 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ) {
-  res.status(500).json({
-    error: "Internal Server Error",
-  });
+   
 }

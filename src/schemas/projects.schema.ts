@@ -5,6 +5,7 @@ export const createProjectSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   status: z.nativeEnum(ProjectStatus),
+  endDate: z.coerce.date().optional(),
 });
 
 export const addUserToProjectSchema = z.object({
@@ -15,6 +16,7 @@ export const updateProjectSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   description: z.string().optional(),
   status: z.nativeEnum(ProjectStatus).optional(),
+  endDate: z.coerce.date().optional(),
 });
 
 export const getProjectsQuerySchema = z.object({
