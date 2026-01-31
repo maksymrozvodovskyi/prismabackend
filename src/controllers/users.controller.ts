@@ -40,9 +40,16 @@ export const getUsers = async (
       role: query.userType,
       status: query.status,
     });
+    
+    const skip = query.skip || 0;
+    const hasMore = skip + result.users.length < result.total;
+    const nextSkip = hasMore ? skip + result.users.length : undefined;
+    
     res.status(200).json({
       data: result.users,
       total: result.total,
+      hasMore,
+      nextSkip,
     });
   } catch (err) {
     next(err);

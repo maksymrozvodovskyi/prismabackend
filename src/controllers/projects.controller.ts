@@ -74,9 +74,28 @@ export const getListOfProjects = async (req: AuthRequest, res: Response, next: N
         ? await projectService.getAllProjects(filters)
         : await projectService.getProjectsByUser(req.userId!, filters);
 
+    const statistics = {
+      total: result.total,
+      byStatus: {
+        PLANNED: 0,
+        INPROGRESS: 0,
+        ONHOLD: 0,
+        COMPLETED: 0,
+        CANCELLED: 0,
+        SUPPORT: 0,
+      },
+    };
+
+    result.projects.forEach((project) => {
+      if (statistics.byStatus[project.status as keyof typeof statistics.byStatus] !== undefined) {
+        statistics.byStatus[project.status as keyof typeof statistics.byStatus]++;
+      }
+    });
+
     return res.status(200).json({
       data: result.projects,
       total: result.total,
+      statistics,
     });
   } catch (err) {
     next(err);

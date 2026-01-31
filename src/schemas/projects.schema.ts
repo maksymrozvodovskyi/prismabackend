@@ -5,7 +5,17 @@ export const createProjectSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   status: z.nativeEnum(ProjectStatus),
-  endDate: z.coerce.date().optional(),
+  endDate: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "Invalid date format. Use YYYY-MM-DD format",
+    })
+    .transform((val) => {
+      const date = new Date(val);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    })
+    .optional(),
 });
 
 export const addUserToProjectSchema = z.object({
