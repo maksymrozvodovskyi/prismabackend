@@ -1,7 +1,9 @@
 import { ActivityType } from "../../prisma/generated/prisma";
+import { cache, CacheKeys } from "../lib/cache";
 import { prisma } from "../prisma";
 import { CreateWorkLogDtoType } from "../schemas/workLogs.schema";
 import createHttpError from "http-errors";
+import { createHash } from "crypto";
 
 export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) => {
   const isSickLeave = data.activity === ActivityType.SICKLEAVE;
@@ -113,53 +115,67 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
     )
   );
 
+  const patternsToInvalidate = [
+    CacheKeys.worklogs.pattern.userRelated(userId),
+  ];
+  
+  if (data.projectId) {
+    patternsToInvalidate.push(CacheKeys.worklogs.pattern.byProject(data.projectId));
+  }
+
+  await cache.invalidate(...patternsToInvalidate);
+
   return workLogs.length === 1 ? workLogs[0] : workLogs;
 };
 
-export const getWorkLogsByProject = async (
-  userId: string,
-  projectId: string
-) => {
-  const isMember = await prisma.project.findFirst({
-    where: {
-      id: projectId,
-      users: {
-        some: { id: userId },
+export const getWorkLogsByProject = async (userId: string, projectId: string) => {
+  const cacheKey = CacheKeys.worklogs.byProject(projectId, userId);
+
+  return await cache.worklogs(cacheKey, async () => {
+    const isMember = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        users: { some: { id: userId } },
       },
-    },
-  });
+      select: { id: true },
+    });
 
-  if (!isMember) {
-    throw createHttpError(403, "Forbidden");
-  }
+    if (!isMember) {
+      throw createHttpError(403, "Forbidden");
+    }
 
-  return prisma.workLog.findMany({
-    where: { projectId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
+    return await prisma.workLog.findMany({
+      where: { projectId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-    },
-    orderBy: { date: "desc" },
+      orderBy: { date: "desc" },
+    });
   });
 };
 
 export const getWorkLogsByUser = async (userId: string) => {
-  return prisma.workLog.findMany({
-    where: { userId },
-    include: {
-      project: {
-        select: {
-          id: true,
-          name: true,
-          status: true,
+  const cacheKey = CacheKeys.worklogs.listByUser(userId);
+
+  return await cache.worklogs(cacheKey, async () => {
+    return await prisma.workLog.findMany({
+      where: { userId },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+          },
         },
       },
-    },
-    orderBy: { date: "desc" },
+      orderBy: { date: "desc" },
+    });
   });
 };
 
@@ -231,10 +247,26 @@ export const updateWorkLog = async (
     }
   }
 
-  return prisma.workLog.update({
+  const updatedLog = await prisma.workLog.update({
     where: { id: workLogId },
     data: updateData,
   });
+
+  const patternsToInvalidate = [
+    CacheKeys.worklogs.pattern.userRelated(updatedLog.userId),
+  ];
+  
+  if (updatedLog.projectId) {
+    patternsToInvalidate.push(CacheKeys.worklogs.pattern.byProject(updatedLog.projectId));
+  }
+  
+  if (existingLog.projectId && existingLog.projectId !== updatedLog.projectId) {
+    patternsToInvalidate.push(CacheKeys.worklogs.pattern.byProject(existingLog.projectId));
+  }
+
+  await cache.invalidate(...patternsToInvalidate);
+
+  return updatedLog;
 };
 
 export const getWorkLogsByUserId = async (
@@ -244,84 +276,110 @@ export const getWorkLogsByUserId = async (
   type?: ActivityType | ActivityType[],
   sortOrder: "asc" | "desc" = "asc"
 ) => {
+ 
+  const hash = createHash("sha256")
+    .update(
+      JSON.stringify({
+        userId,
+        startDate: startDate ? startDate.toISOString() : null,
+        endDate: endDate ? endDate.toISOString() : null,
+        type: Array.isArray(type) ? [...type].sort() : type ?? null,
+        sortOrder,
+      })
+    )
+    .digest("hex");
 
-  const start = startDate ? (startDate instanceof Date ? startDate : new Date(startDate)) : undefined;
-  const end = endDate ? (endDate instanceof Date ? endDate : new Date(endDate)) : undefined;
+  const cacheKey = CacheKeys.worklogs.byUser(userId, hash);
 
-  const logs = await prisma.workLog.findMany({
-    where: {
-      userId,
-      ...(start && end && {
-      date: {
-        gte: start,
-        lte: end,
+  return await cache.worklogs(cacheKey, async () => {
+    const start = startDate
+      ? startDate instanceof Date
+        ? startDate
+        : new Date(startDate)
+      : undefined;
+
+    const end = endDate
+      ? endDate instanceof Date
+        ? endDate
+        : new Date(endDate)
+      : undefined;
+
+    const logs = await prisma.workLog.findMany({
+      where: {
+        userId,
+        ...(start && end && {
+          date: {
+            gte: start,
+            lte: end,
+          },
+        }),
+        ...(type && {
+          activity: Array.isArray(type)
+            ? { in: type }
+            : type,
+        }),
       },
-      }),
-      ...(type && {
-        activity: Array.isArray(type) 
-          ? { in: type }
-          : type
-      }),
-    },
-    include: {
-      project: {
-        select: { id: true, name: true },
+      include: {
+        project: {
+          select: { id: true, name: true },
+        },
       },
-    },
-    orderBy: { date: sortOrder },
-  });
-
-  const projectsMap: Record<
-    string,
-    {
-      project: { id: string; name: string } | null;
-      totalHours: number;
-      logs: typeof logs;
-    }
-  > = {};
-
-  const vacationAndSickLeaveLogs: typeof logs = [];
-
-  let totalUserHours = 0;
-
-  logs.forEach((log) => {
-    totalUserHours += log.hours;
-
-    if (!log.projectId || !log.project) {
-      vacationAndSickLeaveLogs.push(log);
-      return;
-    }
-
-    const projectId = log.project.id;
-    if (!projectsMap[projectId]) {
-      projectsMap[projectId] = {
-        project: log.project,
-        totalHours: 0,
-        logs: [],
-      };
-    }
-
-    projectsMap[projectId].totalHours += log.hours;
-    projectsMap[projectId].logs.push(log);
-  });
-
-  const projects = Object.values(projectsMap);
-
-  if (vacationAndSickLeaveLogs.length > 0) {
-    const vacationSickLeaveHours = vacationAndSickLeaveLogs.reduce(
-      (sum, log) => sum + log.hours,
-      0
-    );
-    projects.push({
-      project: null,
-      totalHours: vacationSickLeaveHours,
-      logs: vacationAndSickLeaveLogs,
+      orderBy: { date: sortOrder },
     });
-  }
 
-  return {
-    userId,
-    totalUserHours,
-    projects,
-  };
+    const projectsMap: Record<
+      string,
+      {
+        project: { id: string; name: string } | null;
+        totalHours: number;
+        logs: typeof logs;
+      }
+    > = {};
+
+    const vacationAndSickLeaveLogs: typeof logs = [];
+    let totalUserHours = 0;
+
+    logs.forEach((log) => {
+      totalUserHours += log.hours;
+
+      if (!log.projectId || !log.project) {
+        vacationAndSickLeaveLogs.push(log);
+        return;
+      }
+
+      const projectId = log.project.id;
+
+      if (!projectsMap[projectId]) {
+        projectsMap[projectId] = {
+          project: log.project,
+          totalHours: 0,
+          logs: [],
+        };
+      }
+
+      projectsMap[projectId].totalHours += log.hours;
+      projectsMap[projectId].logs.push(log);
+    });
+
+    const projects = Object.values(projectsMap);
+
+    if (vacationAndSickLeaveLogs.length > 0) {
+      const vacationSickLeaveHours = vacationAndSickLeaveLogs.reduce(
+        (sum, log) => sum + log.hours,
+        0
+      );
+
+      projects.push({
+        project: null,
+        totalHours: vacationSickLeaveHours,
+        logs: vacationAndSickLeaveLogs,
+      });
+    }
+
+    return {
+      userId,
+      totalUserHours,
+      projects,
+    };
+  });
 };
