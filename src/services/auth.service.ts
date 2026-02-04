@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { getToken, getResetToken } from "../utils/jwt";
 import { sendPasswordResetCode } from "./email.service";
 import createHttpError from "http-errors";
+import { cache, CacheKeys } from "../lib/cache";
 
 export const login = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
@@ -34,15 +35,21 @@ export const login = async (email: string, password: string) => {
 };
 
 export const getMe = async (userId: string) => {
-  return prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      createdAt: true,
-    },
+  const cacheKey = CacheKeys.auth.me(userId);
+
+  return await cache.auth(cacheKey, async () => {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    return user;
   });
 };
 
