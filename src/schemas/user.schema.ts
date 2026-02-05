@@ -21,7 +21,7 @@ export const dateQuerySchema = z.object({
 
 export const getUsersQuerySchema = z.object({
   skip: z.coerce.number().int().min(0).default(0),
-  take: z.coerce.number().int().min(1).max(100).default(20),
+  take: z.coerce.number().int().min(1).max(10000).default(20),
   sortOrder: z.enum(["asc", "desc"]).optional(),
   sortField: z
     .enum(["name", "email", "createdAt", "role", "status"])

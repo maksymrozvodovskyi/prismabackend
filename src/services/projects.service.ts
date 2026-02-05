@@ -36,7 +36,8 @@ export const addUserToProject = async (projectId: string, userId: string) => {
   await cache.invalidate(
     CacheKeys.projects.pattern.byProject(projectId),
     CacheKeys.users.pattern.profile(userId),
-    CacheKeys.projects.pattern.byUser(userId)
+    CacheKeys.projects.pattern.byUser(userId),
+    CacheKeys.projects.pattern.all()
   );
 
   return project;
