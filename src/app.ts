@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/users.routes";
 import projectRoutes from "./routes/projects.routes";
 import workLogRoutes from "./routes/workLogs.routes";
+import feedbackRoutes from "./routes/feedback.routes";
 
 export const app = express();
 
@@ -26,6 +27,7 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/projects", projectRoutes);
 app.use("/work-logs", workLogRoutes);
+app.use("/feedbacks", feedbackRoutes);
 
 app.use(notFoundHandler);
 

@@ -62,7 +62,7 @@ export const getUserDetails = async (
   next: NextFunction
 ) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
 
     const { startDate, endDate } = dateQuerySchema.parse(req.query);
 
@@ -86,7 +86,7 @@ export const getUserProfile = async (
   next: NextFunction
 ) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
     const user = await userService.getUserProfile(userId);
     res.status(200).json(user);
   } catch (err) {

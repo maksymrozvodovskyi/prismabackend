@@ -50,4 +50,16 @@ export const CacheKeys = {
       user: (userId: string) => `${CacheNamespace.AUTH}:me:${userId}`,
     },
   },
+
+  feedbacks: {
+    byId: (id: string) => makeSimpleKey(CacheNamespace.FEEDBACKS, 'byId', id),
+    forUser: (userId: string, params?: any) => {
+      const paramsStr = params ? `:${JSON.stringify(params)}` : '';
+      return makeSimpleKey(CacheNamespace.FEEDBACKS, 'forUser', userId) + paramsStr;
+    },
+    pattern: {
+      forUser: (userId: string) => `${CacheNamespace.FEEDBACKS}:forUser:${userId}*`,
+      all: () => `${CacheNamespace.FEEDBACKS}:*`,
+    },
+  },
 } as const;

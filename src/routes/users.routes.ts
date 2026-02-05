@@ -12,12 +12,6 @@ import { isAdmin } from "../middlewares/isAdmin";
 
 const router = Router();
 
-router.post(
-  "/",
-  [requireAuth, isAdmin, validate(createUserSchema)],
-  createUser
-);
-
 router.get(
   "/",
   [requireAuth, isAdmin, validate(getUsersQuerySchema, "query")],
@@ -27,5 +21,11 @@ router.get(
 router.get("/:userId/profile", requireAuth, isAdmin, getUserProfile);
 
 router.get("/:userId", requireAuth, isAdmin, getUserDetails);
+
+router.post(
+  "/",
+  [requireAuth, isAdmin, validate(createUserSchema)],
+  createUser
+);
 
 export default router;

@@ -21,7 +21,7 @@ export const createWorkLog = async (req: AuthRequest, res: Response, next: NextF
 };
 
 export const getWorkLogsByProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const { projectId } = req.params;
+  const { projectId } = req.params as { projectId: string };
 
   if (!projectId) {
     return res.status(400).json({ message: "ProjectId required" });
@@ -40,7 +40,7 @@ export const getWorkLogsByProject = async (req: AuthRequest, res: Response, next
 };
 
 export const getWorkLogsByUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const { userId } = req.params;
+  const { userId } = req.params as { userId: string };
 
   if (!userId) {
     return res.status(400).json({ message: "UserId required" });
@@ -61,7 +61,7 @@ export const updateWorkLog = async (
   next: NextFunction
 ) => {
   try {
-    const workLogId = req.params.workLogId;
+    const workLogId = req.params.workLogId as string;
     const userId = req.userId!;
 
     const workLog = await prisma.workLog.findUnique({
@@ -96,7 +96,7 @@ export const updateWorkLog = async (
 
 export const getWorkLogsByTime = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
 
     const { startDate, endDate, type, sortOrder } =
       req.query as GetWorkLogsByTimeQueryType;
