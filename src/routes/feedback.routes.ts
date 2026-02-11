@@ -3,6 +3,7 @@ import {
   createFeedback,
   getMyFeedbacks,
   getFeedbackById,
+  deleteFeedback,
 } from "../controllers/feedback.controller";
 import { validate } from "../middlewares/validate";
 import { createFeedbackSchema, getFeedbacksQuerySchema } from "../schemas/feedback.schema";
@@ -19,6 +20,8 @@ router.post(
   [requireAuth, validate(createFeedbackSchema)],
   createFeedback
 );
+
+router.delete("/:feedbackId", requireAuth, deleteFeedback);
 
 
 export default router;
