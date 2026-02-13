@@ -17,9 +17,10 @@ import { requireAuth, requireResetToken } from "../middlewares/auth";
 
 const router = Router();
 
-router.post("/login", validate(loginSchema), login);
 
 router.get("/me", requireAuth, me);
+
+router.post("/login", validate(loginSchema), login);
 
 router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
 

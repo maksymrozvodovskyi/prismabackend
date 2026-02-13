@@ -36,7 +36,13 @@ export const cache = {
   
   auth: <T>(key: string, fn: () => Promise<T>) =>
     cachedQuery(key, CACHE_TTL.AUTH, fn),
-  
+
+  feedback: <T>(key: string, fn: () => Promise<T>) =>
+    cachedQuery(key, CACHE_TTL.FEEDBACK, fn),
+
+  feedbacks: <T>(key: string, fn: () => Promise<T>) =>
+    cachedQuery(key, CACHE_TTL.FEEDBACKS, fn),
+
   invalidate: async (...patterns: string[]) => {
     await Promise.all(patterns.map(pattern => deleteCacheByPattern(pattern)));
   },

@@ -23,7 +23,7 @@ export const createProject = async (req: AuthRequest, res: Response, next: NextF
 };
 
 export const addUserToProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const { projectId } = req.params;
+  const { projectId } = req.params as { projectId: string };
 
   if (!projectId) {
     return res.status(400).json({ message: "ProjectId required" });
@@ -46,7 +46,7 @@ export const addUserToProject = async (req: AuthRequest, res: Response, next: Ne
 };
 
 export const getProjectById = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const { projectId } = req.params;
+  const { projectId } = req.params as { projectId: string };
 
   if (!projectId) {
     return res.status(400).json({ message: "ProjectId required" });
@@ -103,7 +103,7 @@ export const getListOfProjects = async (req: AuthRequest, res: Response, next: N
 };
 
 export const updateProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const { projectId } = req.params;
+  const { projectId } = req.params as { projectId: string };
 
   if (!projectId) {
     return res.status(400).json({ message: "ProjectId required" });
@@ -123,7 +123,7 @@ export const updateProject = async (req: AuthRequest, res: Response, next: NextF
 
 export const getUserProjects = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
 
     if (!userId) {
       return res.status(400).json({ message: "UserId required" });
