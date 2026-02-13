@@ -5,8 +5,10 @@ import {
   getUserProfile,
   getUsers,
 } from "../controllers/users.controller";
+import { getUserFeedbacks } from "../controllers/feedback.controller";
 import { validate } from "../middlewares/validate";
 import { createUserSchema, getUsersQuerySchema } from "../schemas/user.schema";
+import { getFeedbacksQuerySchema } from "../schemas/feedback.schema";
 import { requireAuth } from "../middlewares/auth";
 import { isAdmin } from "../middlewares/isAdmin";
 
@@ -19,6 +21,12 @@ router.get(
 );
 
 router.get("/:userId/profile", requireAuth, isAdmin, getUserProfile);
+
+router.get(
+  "/:userId/feedbacks",
+  [requireAuth, isAdmin, validate(getFeedbacksQuerySchema, "query")],
+  getUserFeedbacks
+);
 
 router.get("/:userId", requireAuth, isAdmin, getUserDetails);
 

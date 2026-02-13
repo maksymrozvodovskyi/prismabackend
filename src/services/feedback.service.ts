@@ -120,6 +120,9 @@ export const createFeedback = async (data: CreateFeedbackInput) => {
     feedback.taggedUsers,
   );
 
+  const { taggedUsers: _taggedUsers, ...feedbackWithoutTaggedIds } = feedback;
+  const result = { ...feedbackWithoutTaggedIds, taggedUsersDetails };
+
   const cacheKeysToInvalidate = [
     CacheKeys.users.pattern.list(),
     CacheKeys.users.profile(data.targetUserId),
@@ -134,7 +137,7 @@ export const createFeedback = async (data: CreateFeedbackInput) => {
   }
   await Promise.all(cacheKeysToInvalidate.map((key) => cache.invalidate(key)));
 
-  return { ...feedback, taggedUsersDetails };
+  return result;
 };
 
 export const getMyFeedbacks = async (
@@ -234,7 +237,8 @@ export const getMyFeedbacks = async (
           taggedUsersDetails.push(user);
         }
       }
-      return { ...f, taggedUsersDetails };
+      const { taggedUsers: _taggedUsers, ...rest } = f;
+      return { ...rest, taggedUsersDetails };
     });
 
     const hasNextPage = skip + feedbacks.length < total;
@@ -259,7 +263,8 @@ export const getFeedbackById = async (feedbackId: string) => {
     const taggedUsersDetails = await fetchTaggedUsersDetails(
       feedback.taggedUsers,
     );
-    return { ...feedback, taggedUsersDetails };
+    const { taggedUsers: _taggedUsers, ...rest } = feedback;
+    return { ...rest, taggedUsersDetails };
   });
 };
 
