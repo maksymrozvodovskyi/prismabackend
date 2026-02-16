@@ -9,11 +9,15 @@ import {
 import { AuthRequest } from "../middlewares/auth";
 import { Role } from "../../prisma/generated/prisma";
 
-export const createProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const createProject = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const project = await projectService.createProject(
       req.body as CreateProjectDto,
-      req.userId!
+      req.userId!,
     );
 
     return res.status(201).json(project);
@@ -22,7 +26,11 @@ export const createProject = async (req: AuthRequest, res: Response, next: NextF
   }
 };
 
-export const addUserToProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const addUserToProject = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   const { projectId } = req.params as { projectId: string };
 
   if (!projectId) {
@@ -32,7 +40,7 @@ export const addUserToProject = async (req: AuthRequest, res: Response, next: Ne
   try {
     const project = await projectService.addUserToProject(
       projectId,
-      req.body.userId
+      req.body.userId,
     );
 
     if (!project) {
@@ -45,7 +53,11 @@ export const addUserToProject = async (req: AuthRequest, res: Response, next: Ne
   }
 };
 
-export const getProjectById = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getProjectById = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   const { projectId } = req.params as { projectId: string };
 
   if (!projectId) {
@@ -65,32 +77,20 @@ export const getProjectById = async (req: AuthRequest, res: Response, next: Next
   }
 };
 
-export const getListOfProjects = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getListOfProjects = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const filters = getProjectsQuerySchema.parse(req.query);
 
-    const result =
+    const [result, statistics] = await Promise.all([
       req.userRole === Role.ADMIN
-        ? await projectService.getAllProjects(filters)
-        : await projectService.getProjectsByUser(req.userId!, filters);
-
-    const statistics = {
-      total: result.total,
-      byStatus: {
-        PLANNED: 0,
-        INPROGRESS: 0,
-        ONHOLD: 0,
-        COMPLETED: 0,
-        CANCELLED: 0,
-        SUPPORT: 0,
-      },
-    };
-
-    result.projects.forEach((project) => {
-      if (statistics.byStatus[project.status as keyof typeof statistics.byStatus] !== undefined) {
-        statistics.byStatus[project.status as keyof typeof statistics.byStatus]++;
-      }
-    });
+        ? projectService.getAllProjects(filters)
+        : projectService.getProjectsByUser(req.userId!, filters),
+      projectService.getProjectsStats(req.userId!, req.userRole!),
+    ]);
 
     return res.status(200).json({
       data: result.projects,
@@ -102,7 +102,11 @@ export const getListOfProjects = async (req: AuthRequest, res: Response, next: N
   }
 };
 
-export const updateProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const updateProject = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   const { projectId } = req.params as { projectId: string };
 
   if (!projectId) {
@@ -112,7 +116,7 @@ export const updateProject = async (req: AuthRequest, res: Response, next: NextF
   try {
     const project = await projectService.updateProject(
       projectId,
-      req.body as UpdateProjectDto
+      req.body as UpdateProjectDto,
     );
 
     return res.status(200).json(project);
@@ -121,7 +125,11 @@ export const updateProject = async (req: AuthRequest, res: Response, next: NextF
   }
 };
 
-export const getUserProjects = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getUserProjects = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { userId } = req.params as { userId: string };
 

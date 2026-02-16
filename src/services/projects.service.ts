@@ -4,6 +4,7 @@ import {
   UpdateProjectDto,
   GetProjectsFiltersDto,
 } from "../schemas/projects.schema";
+import { Role, ProjectStatus } from "../../prisma/generated/prisma";
 import { createHash } from "crypto";
 import { cache, CacheKeys } from "../lib/cache";
 
@@ -198,4 +199,28 @@ export const getProjectsByUser = async (
 
     return { projects, total };
   });
+};
+
+const STATUS_KEYS = Object.values(ProjectStatus);
+
+export const getProjectsStats = async (userId: string, userRole: Role) => {
+  const userFilter = { users: { some: { id: userId } } };
+  const where = userRole === Role.EMPLOYEE ? userFilter : {};
+
+  const counts = await prisma.project.groupBy({
+    by: ["status"],
+    where,
+    _count: { _all: true },
+  });
+
+  const byStatus: Record<string, number> = {};
+  for (const status of STATUS_KEYS) byStatus[status] = 0;
+
+  let total = 0;
+  for (const row of counts) {
+    byStatus[row.status] = row._count._all;
+    total += row._count._all;
+  }
+
+  return { total, byStatus };
 };
