@@ -29,7 +29,13 @@ export const getUsersQuerySchema = z.object({
     .default("name"),
   name: z.string().optional(),
   userType: z.nativeEnum(Role).optional(),
-  status: z.nativeEnum(UserStatus).optional(),
+  status: z.preprocess(
+    (val) =>
+      typeof val === "string"
+        ? val.split(",").map((s) => s.trim()).filter(Boolean)
+        : val,
+    z.array(z.nativeEnum(UserStatus)).optional(),
+  ),
 });
 
 export type CreateUserDto = z.infer<typeof createUserSchema>;

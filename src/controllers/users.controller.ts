@@ -11,7 +11,7 @@ import { AuthRequest } from "../middlewares/auth";
 export const createUser = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const dto = req.body as CreateUserDto;
@@ -27,7 +27,7 @@ export const createUser = async (
 export const getUsers = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const query = getUsersQuerySchema.parse(req.query) as any;
@@ -40,11 +40,11 @@ export const getUsers = async (
       role: query.userType,
       status: query.status,
     });
-    
+
     const skip = query.skip || 0;
     const hasMore = skip + result.users.length < result.total;
     const nextSkip = hasMore ? skip + result.users.length : undefined;
-    
+
     res.status(200).json({
       data: result.users,
       total: result.total,
@@ -59,7 +59,7 @@ export const getUsers = async (
 export const getUserDetails = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { userId } = req.params as { userId: string };
@@ -83,7 +83,7 @@ export const getUserDetails = async (
 export const getUserProfile = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { userId } = req.params as { userId: string };
