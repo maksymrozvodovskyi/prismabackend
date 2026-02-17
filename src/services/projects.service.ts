@@ -101,7 +101,7 @@ export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
 
   return await cache.projects(cacheKey, async () => {
     const where: any = {};
-    if (status) where.status = status;
+    if (status && status.length > 0) where.status = { in: status };
 
     if (search) {
       where.OR = [
@@ -173,7 +173,7 @@ export const getProjectsByUser = async (
   return await cache.projects(cacheKey, async () => {
     const where: any = { users: { some: { id: userId } } };
 
-    if (status) where.status = status;
+    if (status && status.length > 0) where.status = { in: status };
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },

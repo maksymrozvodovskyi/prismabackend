@@ -68,7 +68,7 @@ export const getUsers = async ({
   sortField?: "name" | "email" | "createdAt" | "role" | "status";
   name?: string;
   role?: Role;
-  status?: UserStatus;
+  status?: UserStatus[];
 } = {}) => {
   const hash = createHash("sha256")
     .update(
@@ -80,7 +80,7 @@ export const getUsers = async ({
         name: name ?? null,
         role: role ?? null,
         status: status ?? null,
-      })
+      }),
     )
     .digest("hex");
 
@@ -90,7 +90,7 @@ export const getUsers = async ({
     const whereConditions: any = {};
     if (name) whereConditions.name = { contains: name, mode: "insensitive" };
     if (role) whereConditions.role = role;
-    if (status) whereConditions.status = status;
+    if (status && status.length > 0) whereConditions.status = { in: status };
 
     const sortDirection = sortOrder || "asc";
 
@@ -135,7 +135,7 @@ export const getUsers = async ({
             },
           });
           return { ...user, projects };
-        })
+        }),
       );
 
       const total = await prisma.user.count({
@@ -153,7 +153,9 @@ export const getUsers = async ({
       prisma.user.findMany({
         skip,
         take,
-        ...(Object.keys(whereConditions).length > 0 && { where: whereConditions }),
+        ...(Object.keys(whereConditions).length > 0 && {
+          where: whereConditions,
+        }),
         orderBy,
         select: {
           id: true,
