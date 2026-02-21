@@ -87,7 +87,7 @@ export const getUsers = async ({
   const cacheKey = CacheKeys.users.list(hash);
 
   return await cache.users(cacheKey, async () => {
-    const whereConditions: any = {};
+    const whereConditions: Record<string, unknown> = {};
     if (name) whereConditions.name = { contains: name, mode: "insensitive" };
     if (role) whereConditions.role = role;
     if (status && status.length > 0) whereConditions.status = { in: status };

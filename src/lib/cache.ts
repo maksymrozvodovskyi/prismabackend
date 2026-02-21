@@ -43,6 +43,9 @@ export const cache = {
   feedbacks: <T>(key: string, fn: () => Promise<T>) =>
     cachedQuery(key, CACHE_TTL.FEEDBACKS, fn),
 
+  reports: <T>(key: string, fn: () => Promise<T>) =>
+    cachedQuery(key, CACHE_TTL.REPORTS, fn),
+
   invalidate: async (...patterns: string[]) => {
     await Promise.all(patterns.map(pattern => deleteCacheByPattern(pattern)));
   },

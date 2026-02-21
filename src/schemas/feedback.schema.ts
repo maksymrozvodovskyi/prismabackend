@@ -2,7 +2,10 @@ import { z } from "zod";
 
 export const createFeedbackSchema = z.object({
   targetUserId: z.string().min(1, "Target user is required"),
-  content: z.string().min(1, "Feedback content is required").max(1000, "Feedback content is too long"),
+  content: z
+    .string()
+    .min(1, "Feedback content is required")
+    .max(1000, "Feedback content is too long"),
   taggedUsers: z.array(z.string()).default([]),
 });
 

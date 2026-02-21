@@ -4,14 +4,16 @@ import { app } from "./app";
 import { getEnvVar } from "./utils/getEnvVar";
 import cron from "node-cron";
 import { cleanupExpiredResetCodes } from "./services/cleanup.service";
-import { prisma } from "./prisma";
 import { connectRedis, disconnectRedis } from "./lib/redis";
+import { cache } from "./lib/cache";
+import { CacheKeys } from "./lib/cache-keys";
 
 const PORT = Number(getEnvVar("PORT", 3000));
 
 async function bootstrap() {
   try {
     await connectRedis();
+    await cache.invalidate(CacheKeys.reports.pattern.list());
 
     cron.schedule("0 0 * * 0", async () => {
       try {

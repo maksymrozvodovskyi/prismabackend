@@ -5,6 +5,8 @@ import { CreateWorkLogDtoType } from "../schemas/workLogs.schema";
 import createHttpError from "http-errors";
 import { createHash } from "crypto";
 
+const MAX_DAILY_HOURS = 16;
+
 export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) => {
   const isSickLeave = data.activity === ActivityType.SICKLEAVE;
   const isVacation = data.activity === ActivityType.VACATION;
@@ -55,6 +57,25 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
     if (existingWorkLogs.length > 0) {
       throw createHttpError(400, "Cannot add vacation/sick leave on days with working hours");
     }
+
+    const existingSickLeaveVacation = await prisma.workLog.findMany({
+      where: {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        activity: data.activity,
+      },
+    });
+
+    if (existingSickLeaveVacation.length > 0) {
+      const activityLabel = isSickLeave ? "Sick leave" : "Vacation";
+      throw createHttpError(
+        409,
+        `${activityLabel} already exists for this date range`,
+      );
+    }
   }
 
   if (!isSickLeave && !isVacation) {
@@ -93,10 +114,10 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
 
       const totalHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0) + hours;
       
-      if (totalHours > 24) {
+      if (totalHours > MAX_DAILY_HOURS) {
         const dateStr = normalizedDate.toISOString().split('T')[0];
         const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0);
-        throw createHttpError(400, `Total hours for ${dateStr} cannot exceed 24 hours. Existing: ${existingHours.toFixed(2)}h, Adding: ${hours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
+        throw createHttpError(400, `Total hours for ${dateStr} cannot exceed ${MAX_DAILY_HOURS} hours. Existing: ${existingHours.toFixed(2)}h, Adding: ${hours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
       }
     }
   }
@@ -117,8 +138,9 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
 
   const patternsToInvalidate = [
     CacheKeys.worklogs.pattern.userRelated(userId),
+    CacheKeys.reports.pattern.list(),
   ];
-  
+
   if (data.projectId) {
     patternsToInvalidate.push(CacheKeys.worklogs.pattern.byProject(data.projectId));
   }
@@ -240,10 +262,10 @@ export const updateWorkLog = async (
 
     const totalHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0) + newHours;
     
-    if (totalHours > 24) {
+    if (totalHours > MAX_DAILY_HOURS) {
       const dateStr = normalizedDate.toISOString().split('T')[0];
       const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0);
-      throw createHttpError(400, `Total hours for ${dateStr} cannot exceed 24 hours. Existing: ${existingHours.toFixed(2)}h, Updating to: ${newHours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
+      throw createHttpError(400, `Total hours for ${dateStr} cannot exceed ${MAX_DAILY_HOURS} hours. Existing: ${existingHours.toFixed(2)}h, Updating to: ${newHours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
     }
   }
 
@@ -254,12 +276,13 @@ export const updateWorkLog = async (
 
   const patternsToInvalidate = [
     CacheKeys.worklogs.pattern.userRelated(updatedLog.userId),
+    CacheKeys.reports.pattern.list(),
   ];
-  
+
   if (updatedLog.projectId) {
     patternsToInvalidate.push(CacheKeys.worklogs.pattern.byProject(updatedLog.projectId));
   }
-  
+
   if (existingLog.projectId && existingLog.projectId !== updatedLog.projectId) {
     patternsToInvalidate.push(CacheKeys.worklogs.pattern.byProject(existingLog.projectId));
   }

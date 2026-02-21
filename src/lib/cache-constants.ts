@@ -3,7 +3,8 @@ export enum CacheNamespace {
   USERS = 'users',
   PROJECTS = 'projects',
   AUTH = 'auth',
-  FEEDBACKS = 'feedbacks'
+  FEEDBACKS = 'feedbacks',
+  REPORTS = 'reports',
 }
 
 export const CACHE_TTL = {
@@ -12,6 +13,7 @@ export const CACHE_TTL = {
   PROJECTS: 600,
   USER_PROFILE: 300,
   AUTH: 60,
-  FEEDBACK: 600, 
-  FEEDBACKS: 600, 
+  FEEDBACK: 600,
+  FEEDBACKS: 600,
+  REPORTS: 300,
 } as const;
