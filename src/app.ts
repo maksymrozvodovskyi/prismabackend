@@ -19,7 +19,7 @@ app.use(cors());
 app.use(
   pino({
     transport: {
-      target: 'pino-pretty',
+      target: "pino-pretty",
     },
   }),
 );
