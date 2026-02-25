@@ -4,7 +4,13 @@ import { ZodSchema } from "zod";
 export const validate =
   (schema: ZodSchema, property: "body" | "query" | "params" = "body") =>
   (req: Request, res: Response, next: NextFunction) => {
-    const result = schema.safeParse((req as any)[property]);
+    const sources = {
+      body: req.body,
+      query: req.query,
+      params: req.params,
+    } as const;
+
+    const result = schema.safeParse(sources[property]);
 
     if (!result.success) {
       return res.status(400).json({
