@@ -1,47 +1,42 @@
 import { z } from "zod";
 import { ActivityType } from "../../prisma/generated/prisma";
-import { dateString, csvEnumArray } from "./schema-helpers";
 
-export const getReportsUsersQuerySchema = z.object({
-  skip: z.coerce.number().int().min(0).default(0),
-  take: z.coerce.number().int().min(1).max(10000).default(20),
+export const getReportsQuerySchema = z.object({
+  date: z.coerce.date(),
+  activity: z.preprocess(
+    (val) =>
+      val
+        ? String(val)
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : undefined,
+    z
+      .array(
+        z.enum(
+          Object.values(ActivityType) as [ActivityType, ...ActivityType[]],
+        ),
+      )
+      .optional(),
+  ),
+  hours: z.preprocess(
+    (val) =>
+      val
+        ? String(val)
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : undefined,
+    z
+      .array(z.enum(["LT_8", "EQ_8", "GT_8"]))
+      .optional(),
+  ),
 
-  sortOrder: z.enum(["asc", "desc"]).optional(),
-  sortField: z
-    .enum(["name", "email", "createdAt", "role", "status"])
-    .default("name"),
-
-  name: z.string().optional(),
-  date: dateString,
-
-  activityTypes: csvEnumArray(z.nativeEnum(ActivityType)).optional(),
-
-  hoursFilter: z.enum(["<8h", "8h", "8h>"]).optional(),
-  reportType: z.enum(["missed", "work", "special", "overtime"]).optional(),
+  skip: z.coerce.number().int().min(0).optional().default(0),
+  take: z.coerce.number().int().min(1).max(100).optional().default(20),
+  sortField: z.enum(["name", "totalMinutes", "status"]).default("name"),
+  sortDirection: z.enum(["asc", "desc"]).default("asc"),
+  name: z.string().trim().min(1).max(50).optional(),
 });
 
-export type GetReportsUsersQueryDto = z.infer<
-  typeof getReportsUsersQuerySchema
->;
-
-const countsSingleDateSchema = z.object({
-  date: dateString,
-});
-
-const countsRangeSchema = z
-  .object({
-    startDate: dateString,
-    endDate: dateString,
-  })
-  .refine((d) => new Date(d.startDate) <= new Date(d.endDate), {
-    message: "startDate must be before or equal to endDate",
-  });
-
-export const getReportsCountsQuerySchema = z.union([
-  countsSingleDateSchema,
-  countsRangeSchema,
-]);
-
-export type GetReportsCountsQueryDto = z.infer<
-  typeof getReportsCountsQuerySchema
->;
+export type GetReportsFiltersDto = z.infer<typeof getReportsQuerySchema>;

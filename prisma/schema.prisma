@@ -91,6 +91,8 @@ model WorkLog {
 
   @@index([userId])
   @@index([projectId])
+  @@index([date])
+  @@index([date, userId])
 }
 
 model Feedback {
