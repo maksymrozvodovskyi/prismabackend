@@ -15,14 +15,27 @@ const statuses = [
   "WITHOUT_REPORT",
 ] as const;
 
+type Status = (typeof statuses)[number];
+
+const statusRank: Record<Status, number> = {
+  CODING: 0,
+  REVIEW: 1,
+  STUDING: 2,
+  SICKLEAVE: 3,
+  VACATION: 4,
+  WITHOUT_REPORT: 5,
+};
+
 type Report = {
   userId: string;
   name: string;
-  status: (typeof statuses)[number];
+  statuses: Status[];
   projects: string[];
   totalMinutes: number;
   total: string;
 };
+
+type ActivitiesByDate = Record<string, ActivityType[]>;
 
 export const getReports = async (filters: GetReportsFiltersDto) => {
   const hash = createHash("sha256")
@@ -34,6 +47,8 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
   return await cache.reports(cacheKey, async () => {
     const {
       date,
+      startDate,
+      endDate,
       skip = 0,
       take = 20,
       sortField = "name",
@@ -41,10 +56,24 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
       name,
       activity,
       hours,
+      onlyWithoutReport = false,
     } = filters;
 
     const activityFilter = parseFilter(activity) as ActivityType[];
     const hoursFilter = parseFilter(hours);
+
+    let dateWhere: Prisma.DateTimeFilter<"WorkLog"> | Date | undefined;
+
+    if (startDate && endDate) {
+      dateWhere = {
+        gte: startDate,
+        lte: endDate,
+      };
+    } else if (date) {
+      dateWhere = date;
+    } else {
+      throw new Error("Need to pass either date or startDate + endDate");
+    }
 
     const users = await prisma.user.findMany({
       where: name ? { name: { contains: name, mode: "insensitive" } } : {},
@@ -52,19 +81,27 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
     });
 
     if (users.length === 0) {
-      return { reports: [], total: 0, totalPages: 0, hasMore: false };
+      return {
+        reports: [],
+        activitiesByDate: {},
+        total: 0,
+        totalPages: 0,
+        hasMore: false,
+      };
     }
 
     const userIds = users.map((user) => user.id);
 
     const logs = await prisma.workLog.findMany({
       where: {
-        date,
+        date: dateWhere,
         userId: { in: userIds },
         activity: activityFilter.length ? { in: activityFilter } : undefined,
       },
+      orderBy: [{ date: "asc" }, { id: "asc" }],
       select: {
         userId: true,
+        date: true,
         hours: true,
         activity: true,
         project: { select: { name: true } },
@@ -73,13 +110,20 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
 
     type Log = (typeof logs)[number];
 
+    const activitiesByDate: ActivitiesByDate = {};
     const logsByUser: Record<string, Log[]> = {};
 
     for (const log of logs) {
-      if (!logsByUser[log.userId]) {
-        logsByUser[log.userId] = [];
-      }
+      if (!logsByUser[log.userId]) logsByUser[log.userId] = [];
       logsByUser[log.userId].push(log);
+
+      if (log.hours && log.hours > 0 && log.activity) {
+        const dateKey = log.date.toISOString().split("T")[0];
+        if (!activitiesByDate[dateKey]) activitiesByDate[dateKey] = [];
+        if (!activitiesByDate[dateKey].includes(log.activity)) {
+          activitiesByDate[dateKey].push(log.activity);
+        }
+      }
     }
 
     const unfilteredReports: Report[] = [];
@@ -88,6 +132,7 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
       const userLogs = logsByUser[user.id] || [];
 
       if (activityFilter.length > 0 && userLogs.length === 0) continue;
+      if (onlyWithoutReport && userLogs.length > 0) continue;
 
       let totalMinutes = 0;
       for (const log of userLogs) {
@@ -103,13 +148,25 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
       }
       projects.sort();
 
-      const status =
-        userLogs.length > 0 ? userLogs[0].activity : "WITHOUT_REPORT";
+      const userStatuses: Status[] = [];
+
+      if (userLogs.length > 0) {
+        for (const log of userLogs) {
+          const act = log.activity;
+          if (act && !userStatuses.includes(act)) {
+            userStatuses.push(act);
+          }
+        }
+
+        userStatuses.sort((a, b) => statusRank[a] - statusRank[b]);
+      } else {
+        userStatuses.push(statuses[statuses.length - 1]);
+      }
 
       unfilteredReports.push({
         userId: user.id,
         name: user.name,
-        status,
+        statuses: userStatuses,
         projects,
         totalMinutes,
         total: formatTotal(totalMinutes),
@@ -127,9 +184,13 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
       let valueA: any;
       let valueB: any;
 
-      if (sortField === "status") {
-        valueA = statuses.indexOf(a.status);
-        valueB = statuses.indexOf(b.status);
+      if (sortField === "primaryStatus") {
+        valueA = a.statuses.length
+          ? statusRank[a.statuses[0]]
+          : statuses.length;
+        valueB = b.statuses.length
+          ? statusRank[b.statuses[0]]
+          : statuses.length;
       } else if (sortField === "totalMinutes") {
         valueA = a.totalMinutes;
         valueB = b.totalMinutes;
@@ -149,6 +210,7 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
 
     return {
       reports,
+      activitiesByDate,
       total,
       totalPages,
       hasMore: skip + take < total,
