@@ -75,10 +75,16 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
       throw new Error("Need to pass either date or startDate + endDate");
     }
 
-    const users = await prisma.user.findMany({
-      where: name ? { name: { contains: name, mode: "insensitive" } } : {},
-      select: { id: true, name: true },
-    });
+    const userQueryHash = createHash("sha256")
+      .update(JSON.stringify({ name }))
+      .digest("hex");
+
+    const users = await cache.users(CacheKeys.users.list(userQueryHash), async () =>
+      prisma.user.findMany({
+        where: name ? { name: { contains: name, mode: "insensitive" } } : {},
+        select: { id: true, name: true },
+      })
+    );
 
     if (users.length === 0) {
       return {
