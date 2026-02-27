@@ -19,7 +19,7 @@ export const createProject = async (data: CreateProjectDto, userId: string) => {
   await cache.invalidate(
     CacheKeys.users.pattern.profile(userId),
     CacheKeys.projects.pattern.byUser(userId),
-    CacheKeys.projects.pattern.all()
+    CacheKeys.projects.pattern.all(),
   );
 
   return project;
@@ -38,13 +38,16 @@ export const addUserToProject = async (projectId: string, userId: string) => {
     CacheKeys.projects.pattern.byProject(projectId),
     CacheKeys.users.pattern.profile(userId),
     CacheKeys.projects.pattern.byUser(userId),
-    CacheKeys.projects.pattern.all()
+    CacheKeys.projects.pattern.all(),
   );
 
   return project;
 };
 
-export const updateProject = async (projectId: string, data: UpdateProjectDto) => {
+export const updateProject = async (
+  projectId: string,
+  data: UpdateProjectDto,
+) => {
   const project = await prisma.project.update({
     where: { id: projectId },
     data,
@@ -94,7 +97,9 @@ export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
   } = filters;
 
   const hash = createHash("sha256")
-    .update(JSON.stringify({ skip, take, status, sortField, sortDirection, search }))
+    .update(
+      JSON.stringify({ skip, take, status, sortField, sortDirection, search }),
+    )
     .digest("hex");
 
   const cacheKey = CacheKeys.projects.all(hash);
@@ -121,7 +126,9 @@ export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
       allProjects.sort((a, b) => {
         const aName = a.name.toLowerCase();
         const bName = b.name.toLowerCase();
-        const comparison = aName.localeCompare(bName, undefined, { sensitivity: "base" });
+        const comparison = aName.localeCompare(bName, undefined, {
+          sensitivity: "base",
+        });
         return sortDirection === "desc" ? -comparison : comparison;
       });
 
@@ -153,7 +160,7 @@ export const getAllProjects = async (filters: GetProjectsFiltersDto) => {
 
 export const getProjectsByUser = async (
   userId: string,
-  filters: GetProjectsFiltersDto
+  filters: GetProjectsFiltersDto,
 ) => {
   const {
     skip = 0,
@@ -165,7 +172,9 @@ export const getProjectsByUser = async (
   } = filters;
 
   const hash = createHash("sha256")
-    .update(JSON.stringify({ skip, take, status, sortField, sortDirection, search }))
+    .update(
+      JSON.stringify({ skip, take, status, sortField, sortDirection, search }),
+    )
     .digest("hex");
 
   const cacheKey = CacheKeys.projects.byUser(userId, hash);

@@ -12,7 +12,7 @@ export const getCachedData = async (key: string): Promise<string | null> => {
 export const saveToCacheWithExpiry = async (
   key: string,
   ttlSeconds: number,
-  value: unknown
+  value: unknown,
 ): Promise<void> => {
   try {
     await redis.setEx(key, ttlSeconds, JSON.stringify(value));
@@ -21,15 +21,21 @@ export const saveToCacheWithExpiry = async (
   }
 };
 
-export const deleteCacheKeys = async (keys: string | string[]): Promise<void> => {
+export const deleteCacheKeys = async (
+  keys: string | string[],
+): Promise<void> => {
   try {
-    await redis.del(keys as any);
+    if (keys.length > 0) {
+      await redis.unlink(keys as any);
+    }
   } catch (err) {
-    console.warn("Redis DEL failed", err);
+    console.warn("Redis UNLINK failed", err);
   }
 };
 
-export const deleteCacheByPattern = async (pattern: string): Promise<number> => {
+export const deleteCacheByPattern = async (
+  pattern: string,
+): Promise<number> => {
   try {
     const keys: string[] = [];
     let cursor = "0";
@@ -54,4 +60,3 @@ export const deleteCacheByPattern = async (pattern: string): Promise<number> => 
     return 0;
   }
 };
-

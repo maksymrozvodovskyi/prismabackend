@@ -1,10 +1,14 @@
-import { getCachedData, saveToCacheWithExpiry, deleteCacheByPattern } from "./cache-redis";
+import {
+  getCachedData,
+  saveToCacheWithExpiry,
+  deleteCacheByPattern,
+} from "./cache-redis";
 import { CACHE_TTL } from "./cache-constants";
 
 export const cachedQuery = async <T>(
   key: string,
   ttlSeconds: number,
-  fetchFn: () => Promise<T>
+  fetchFn: () => Promise<T>,
 ): Promise<T> => {
   try {
     const cached = await getCachedData(key);
@@ -24,16 +28,16 @@ export const cachedQuery = async <T>(
 export const cache = {
   worklogs: <T>(key: string, fn: () => Promise<T>) =>
     cachedQuery(key, CACHE_TTL.WORKLOGS, fn),
-  
+
   projects: <T>(key: string, fn: () => Promise<T>) =>
     cachedQuery(key, CACHE_TTL.PROJECTS, fn),
-  
+
   users: <T>(key: string, fn: () => Promise<T>) =>
     cachedQuery(key, CACHE_TTL.USERS, fn),
-  
+
   userProfile: <T>(key: string, fn: () => Promise<T>) =>
     cachedQuery(key, CACHE_TTL.USER_PROFILE, fn),
-  
+
   auth: <T>(key: string, fn: () => Promise<T>) =>
     cachedQuery(key, CACHE_TTL.AUTH, fn),
 
@@ -47,7 +51,7 @@ export const cache = {
     cachedQuery(key, CACHE_TTL.REPORTS, fn),
 
   invalidate: async (...patterns: string[]) => {
-    await Promise.all(patterns.map(pattern => deleteCacheByPattern(pattern)));
+    await Promise.all(patterns.map((pattern) => deleteCacheByPattern(pattern)));
   },
 };
 
@@ -56,7 +60,7 @@ export { CacheNamespace, CACHE_TTL } from "./cache-constants";
 export {
   getCachedData,
   saveToCacheWithExpiry,
-  deleteCacheByPattern
+  deleteCacheByPattern,
 } from "./cache-redis";
 
 export { makeSimpleKey, CacheKeys } from "./cache-keys";

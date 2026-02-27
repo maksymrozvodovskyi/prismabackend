@@ -110,6 +110,15 @@ export const getUsers = async ({
           location: true,
           skills: true,
           createdAt: true,
+          projects: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              status: true,
+              createdAt: true,
+            },
+          },
         },
       });
 
@@ -122,28 +131,12 @@ export const getUsers = async ({
 
       const paginatedUsers = allUsers.slice(skip, skip + take);
 
-      const usersWithProjects = await Promise.all(
-        paginatedUsers.map(async (user) => {
-          const projects = await prisma.project.findMany({
-            where: { users: { some: { id: user.id } } },
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              status: true,
-              createdAt: true,
-            },
-          });
-          return { ...user, projects };
-        }),
-      );
-
       const total = await prisma.user.count({
         where:
           Object.keys(whereConditions).length > 0 ? whereConditions : undefined,
       });
 
-      return { users: usersWithProjects, total };
+      return { users: paginatedUsers, total };
     }
 
     const orderBy: Record<string, "asc" | "desc"> = {};

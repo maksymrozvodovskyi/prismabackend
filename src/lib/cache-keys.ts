@@ -85,9 +85,12 @@ export const CacheKeys = {
     counts: (date: string) =>
       makeSimpleKey(CacheNamespace.REPORTS, "counts", date),
     countsRange: (startDate: string, endDate: string) =>
-      makeSimpleKey(CacheNamespace.REPORTS, "counts", `${startDate}_${endDate}`),
-    list: (hash: string) =>
-      makeSimpleKey(CacheNamespace.REPORTS, "list", hash),
+      makeSimpleKey(
+        CacheNamespace.REPORTS,
+        "counts",
+        `${startDate}_${endDate}`,
+      ),
+    list: (hash: string) => makeSimpleKey(CacheNamespace.REPORTS, "list", hash),
     pattern: {
       list: () => `${CacheNamespace.REPORTS}:*`,
       forDate: (date: string) => `${CacheNamespace.REPORTS}:users:${date}:*`,
