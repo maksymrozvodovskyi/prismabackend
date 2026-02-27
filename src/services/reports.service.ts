@@ -2,7 +2,7 @@ import type { Prisma } from "../../prisma/generated/prisma";
 import { prisma } from "../prisma";
 import { ActivityType } from "../../prisma/generated/prisma";
 import { GetReportsFiltersDto } from "../schemas/reports.schema";
-import { formatTotal, matchesHours, parseFilter } from "../utils";
+import { formatTotal, matchesHours } from "../utils";
 import { createHash } from "crypto";
 import { cache, CacheKeys } from "../lib/cache";
 
@@ -16,15 +16,6 @@ const statuses = [
 ] as const;
 
 type Status = (typeof statuses)[number];
-
-const statusRank: Record<Status, number> = {
-  CODING: 0,
-  REVIEW: 1,
-  STUDING: 2,
-  SICKLEAVE: 3,
-  VACATION: 4,
-  WITHOUT_REPORT: 5,
-};
 
 type Report = {
   userId: string;
@@ -46,180 +37,173 @@ export const getReports = async (filters: GetReportsFiltersDto) => {
 
   return await cache.reports(cacheKey, async () => {
     const {
-      date,
-      startDate,
-      endDate,
-      skip = 0,
-      take = 20,
-      sortField = "name",
-      sortDirection = "asc",
-      name,
-      activity,
-      hours,
-      onlyWithoutReport = false,
-    } = filters;
+    date,
+    startDate,
+    endDate,
+    skip = 0,
+    take = 20,
+    sortField = "name",
+    sortDirection = "asc",
+    name,
+    activity,
+    hours,
+    onlyWithoutReport = false,
+  } = filters;
 
-    const activityFilter = parseFilter(activity) as ActivityType[];
-    const hoursFilter = parseFilter(hours);
+  const activityFilter = activity || [];
+  const hoursFilter = hours || [];
 
-    let dateWhere: Prisma.DateTimeFilter<"WorkLog"> | Date | undefined;
+  let dateWhere: Prisma.DateTimeFilter<"WorkLog"> | Date | undefined;
 
-    if (startDate && endDate) {
-      dateWhere = {
-        gte: startDate,
-        lte: endDate,
+  const isRange = !!(startDate && endDate);
+
+  if (isRange) {
+    dateWhere = { gte: startDate, lte: endDate };
+  } else if (date) {
+    dateWhere = date;
+  } else {
+    throw new Error("Need to pass either date or startDate + endDate");
+  }
+
+  const workLogsFilter = onlyWithoutReport
+    ? { none: { date: dateWhere } }
+    : {
+        some: {
+          date: dateWhere,
+          ...(activityFilter.length
+            ? { activity: { in: activityFilter } }
+            : {}),
+        },
       };
-    } else if (date) {
-      dateWhere = date;
-    } else {
-      throw new Error("Need to pass either date or startDate + endDate");
-    }
 
-    const userQueryHash = createHash("sha256")
-      .update(JSON.stringify({ name }))
-      .digest("hex");
-
-    const users = await cache.users(CacheKeys.users.list(userQueryHash), async () =>
-      prisma.user.findMany({
-        where: name ? { name: { contains: name, mode: "insensitive" } } : {},
-        select: { id: true, name: true },
-      })
-    );
-
-    if (users.length === 0) {
-      return {
-        reports: [],
-        activitiesByDate: {},
-        total: 0,
-        totalPages: 0,
-        hasMore: false,
-      };
-    }
-
-    const userIds = users.map((user) => user.id);
-
-    const logs = await prisma.workLog.findMany({
-      where: {
-        date: dateWhere,
-        userId: { in: userIds },
-        activity: activityFilter.length ? { in: activityFilter } : undefined,
+  const usersWithLogs = await prisma.user.findMany({
+    where: {
+      ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
+      workLogs: workLogsFilter,
+    },
+    select: {
+      id: true,
+      name: true,
+      workLogs: {
+        where: {
+          date: dateWhere,
+          activity: activityFilter.length ? { in: activityFilter } : undefined,
+        },
+        orderBy: [{ date: "asc" }, { id: "asc" }],
+        select: {
+          date: true,
+          hours: true,
+          activity: true,
+          project: { select: { name: true } },
+        },
       },
-      orderBy: [{ date: "asc" }, { id: "asc" }],
-      select: {
-        userId: true,
-        date: true,
-        hours: true,
-        activity: true,
-        project: { select: { name: true } },
-      },
-    });
+    },
+  });
 
-    type Log = (typeof logs)[number];
+  if (usersWithLogs.length === 0) {
+    return {
+      reports: [],
+      activitiesByDate: {},
+      total: 0,
+      totalPages: 0,
+      hasMore: false,
+    };
+  }
 
-    const activitiesByDate: ActivitiesByDate = {};
-    const logsByUser: Record<string, Log[]> = {};
+  const activitiesByDate: ActivitiesByDate = {};
+  const unfilteredReports: Report[] = [];
 
-    for (const log of logs) {
-      if (!logsByUser[log.userId]) logsByUser[log.userId] = [];
-      logsByUser[log.userId].push(log);
+  for (const user of usersWithLogs) {
+    const userLogs = user.workLogs;
 
-      if (log.hours && log.hours > 0 && log.activity) {
+    if (isRange && userLogs.length === 0) continue;
+    if (onlyWithoutReport && userLogs.length > 0) continue;
+
+    let totalMinutes = 0;
+
+    const projectsSet = new Set<string>();
+    const userStatusesSet = new Set<Status>();
+
+    for (const log of userLogs) {
+      totalMinutes += Math.round((Number(log.hours) ?? 0) * 60);
+
+      if (log.project?.name) {
+        projectsSet.add(log.project.name);
+      }
+
+      if (log.activity) {
+        userStatusesSet.add(log.activity);
+
         const dateKey = log.date.toISOString().split("T")[0];
-        if (!activitiesByDate[dateKey]) activitiesByDate[dateKey] = [];
+
+        if (!activitiesByDate[dateKey]) {
+          activitiesByDate[dateKey] = [];
+        }
+
         if (!activitiesByDate[dateKey].includes(log.activity)) {
           activitiesByDate[dateKey].push(log.activity);
         }
       }
     }
 
-    const unfilteredReports: Report[] = [];
+    const projects = [...projectsSet].sort();
 
-    for (const user of users) {
-      const userLogs = logsByUser[user.id] || [];
-
-      if (activityFilter.length > 0 && userLogs.length === 0) continue;
-      if (onlyWithoutReport && userLogs.length > 0) continue;
-
-      let totalMinutes = 0;
-      for (const log of userLogs) {
-        totalMinutes += Math.round((log.hours ?? 0) * 60);
-      }
-
-      const projects: string[] = [];
-      for (const log of userLogs) {
-        const projectName = log.project?.name;
-        if (projectName && !projects.includes(projectName)) {
-          projects.push(projectName);
-        }
-      }
-      projects.sort();
-
-      const userStatuses: Status[] = [];
-
-      if (userLogs.length > 0) {
-        for (const log of userLogs) {
-          const act = log.activity;
-          if (act && !userStatuses.includes(act)) {
-            userStatuses.push(act);
-          }
-        }
-
-        userStatuses.sort((a, b) => statusRank[a] - statusRank[b]);
-      } else {
-        userStatuses.push(statuses[statuses.length - 1]);
-      }
-
-      unfilteredReports.push({
-        userId: user.id,
-        name: user.name,
-        statuses: userStatuses,
-        projects,
-        totalMinutes,
-        total: formatTotal(totalMinutes),
-      });
-    }
-
-    const filteredReports = unfilteredReports.filter((report) =>
-      matchesHours(
-        report.totalMinutes,
-        hoursFilter as ("LT_8" | "EQ_8" | "GT_8")[],
-      ),
+    const userStatuses = [...userStatusesSet].sort((a, b) =>
+      a.localeCompare(b),
     );
 
-    filteredReports.sort((a, b) => {
-      let valueA: any;
-      let valueB: any;
+    if (userStatuses.length === 0) {
+      userStatuses.push("WITHOUT_REPORT");
+    }
 
-      if (sortField === "primaryStatus") {
-        valueA = a.statuses.length
-          ? statusRank[a.statuses[0]]
-          : statuses.length;
-        valueB = b.statuses.length
-          ? statusRank[b.statuses[0]]
-          : statuses.length;
-      } else if (sortField === "totalMinutes") {
-        valueA = a.totalMinutes;
-        valueB = b.totalMinutes;
-      } else {
-        valueA = a[sortField];
-        valueB = b[sortField];
-      }
-
-      if (valueA < valueB) return sortDirection === "asc" ? -1 : 1;
-      if (valueA > valueB) return sortDirection === "asc" ? 1 : -1;
-      return 0;
+    unfilteredReports.push({
+      userId: user.id,
+      name: user.name,
+      statuses: userStatuses,
+      projects,
+      totalMinutes,
+      total: formatTotal(totalMinutes),
     });
+  }
 
-    const total = filteredReports.length;
-    const reports = filteredReports.slice(skip, skip + take);
-    const totalPages = Math.ceil(total / take);
+  const filteredReports = unfilteredReports.filter((report) =>
+    matchesHours(
+      report.totalMinutes,
+      hoursFilter as ("LT_8" | "EQ_8" | "GT_8")[],
+    ),
+  );
 
-    return {
-      reports,
-      activitiesByDate,
-      total,
-      totalPages,
-      hasMore: skip + take < total,
+  filteredReports.sort((a, b) => {
+    let valueA: any;
+    let valueB: any;
+
+    if (sortField === "primaryStatus") {
+      valueA = a.statuses.length ? a.statuses[0] : "WITHOUT_REPORT";
+      valueB = b.statuses.length ? b.statuses[0] : "WITHOUT_REPORT";
+    } else if (sortField === "totalMinutes") {
+      valueA = a.totalMinutes;
+      valueB = b.totalMinutes;
+    } else {
+      valueA = a[sortField];
+      valueB = b[sortField];
+    }
+
+    if (valueA < valueB) return sortDirection === "asc" ? -1 : 1;
+    if (valueA > valueB) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const total = filteredReports.length;
+  const totalPages = Math.ceil(total / take);
+
+  const reports = filteredReports.slice(skip, skip + take);
+
+  return {
+    reports,
+    activitiesByDate,
+    total,
+    totalPages,
+    hasMore: skip + take < total,
     };
   });
 };

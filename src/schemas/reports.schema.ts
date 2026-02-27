@@ -34,12 +34,12 @@ export const getReportsQuerySchema = z
       z.array(z.enum(["LT_8", "EQ_8", "GT_8"])).optional(),
     ),
 
-    skip: z.coerce.number().int().min(0).optional().default(0),
-    take: z.coerce.number().int().min(1).max(100).optional().default(20),
+    skip: z.coerce.number().int().min(0).default(0),
+    take: z.coerce.number().int().min(1).max(100).default(20),
     onlyWithoutReport: z
       .preprocess(
         (val) => val === "true" || val === true,
-        z.boolean().optional(),
+        z.boolean(),
       )
       .optional(),
     sortField: z.enum(["name", "totalMinutes", "primaryStatus"]).default("name"),

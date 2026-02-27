@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "./generated/prisma"
-  engineType    = "binary"
+  engineType    = "library"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -57,9 +57,11 @@ model User {
 
   projects Project[]
   workLogs WorkLog[]
-  
+
   authoredFeedbacks Feedback[] @relation("FeedbackAuthor")
   receivedFeedbacks Feedback[] @relation("FeedbackTarget")
+
+  @@index([name])
 }
 
 model Project {
@@ -80,7 +82,7 @@ model WorkLog {
   userId     String
   projectId  String?
   date       DateTime     @db.Date
-  hours      Float
+  hours      Decimal @db.Decimal(4, 2)
   activity   ActivityType
   isApproved Boolean?
   createdAt  DateTime     @default(now())
@@ -89,10 +91,9 @@ model WorkLog {
   user      User         @relation(fields: [userId], references: [id])
   project   Project?     @relation(fields: [projectId], references: [id])
 
-  @@index([userId])
   @@index([projectId])
-  @@index([date])
-  @@index([date, userId])
+  @@index([userId, date])
+  @@index([userId, date, activity])
 }
 
 model Feedback {

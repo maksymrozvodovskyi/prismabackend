@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import * as reportsService from "../services/reports.service";
-import { GetReportsFiltersDto } from "../schemas/reports.schema";
+import { getReportsQuerySchema } from "../schemas/reports.schema";
 import { AuthRequest } from "../middlewares/auth";
 
 export const getReports = async (
@@ -9,7 +9,7 @@ export const getReports = async (
   next: NextFunction,
 ) => {
   try {
-    const filters = res.locals.query as GetReportsFiltersDto;
+    const filters = getReportsQuerySchema.parse(req.query);
 
     const result = await reportsService.getReports(filters);
 

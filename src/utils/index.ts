@@ -6,17 +6,6 @@ export function formatTotal(totalMinutes: number): string {
 
 const MINUTES_IN_8_HOURS = 480;
 
-export const parseFilter = (value: any): string[] => {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
-  if (typeof value === "string") {
-    return value
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-  return [];
-};
 
 export function matchesHours(
   totalMinutes: number,
