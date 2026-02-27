@@ -112,11 +112,11 @@ export const createWorkLog = async (userId: string, data: CreateWorkLogDtoType) 
         },
       });
 
-      const totalHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0) + hours;
+      const totalHours = existingWorkLogs.reduce((sum, log) => sum + log.hours.toNumber(), 0) + hours;
       
       if (totalHours > MAX_DAILY_HOURS) {
         const dateStr = normalizedDate.toISOString().split('T')[0];
-        const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0);
+        const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours.toNumber(), 0);
         throw createHttpError(400, `Total hours for ${dateStr} cannot exceed ${MAX_DAILY_HOURS} hours. Existing: ${existingHours.toFixed(2)}h, Adding: ${hours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
       }
     }
@@ -241,7 +241,7 @@ export const updateWorkLog = async (
   }
 
   const targetDate = data.date ? new Date(data.date) : existingLog.date;
-  const newHours = data.hours !== undefined ? data.hours : existingLog.hours;
+  const newHours = data.hours !== undefined ? data.hours : existingLog.hours.toNumber();
   const willBeSickLeaveOrVacation = isSickLeave || isVacation || 
     (existingLog.activity === ActivityType.SICKLEAVE || existingLog.activity === ActivityType.VACATION);
 
@@ -260,11 +260,11 @@ export const updateWorkLog = async (
       },
     });
 
-    const totalHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0) + newHours;
+    const totalHours = existingWorkLogs.reduce((sum, log) => sum + log.hours.toNumber(), 0) + newHours;
     
     if (totalHours > MAX_DAILY_HOURS) {
       const dateStr = normalizedDate.toISOString().split('T')[0];
-      const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours, 0);
+      const existingHours = existingWorkLogs.reduce((sum, log) => sum + log.hours.toNumber(), 0);
       throw createHttpError(400, `Total hours for ${dateStr} cannot exceed ${MAX_DAILY_HOURS} hours. Existing: ${existingHours.toFixed(2)}h, Updating to: ${newHours.toFixed(2)}h, Total: ${totalHours.toFixed(2)}h`);
     }
   }
@@ -363,7 +363,7 @@ export const getWorkLogsByUserId = async (
     let totalUserHours = 0;
 
     logs.forEach((log) => {
-      totalUserHours += log.hours;
+      totalUserHours += log.hours.toNumber();
 
       if (!log.projectId || !log.project) {
         vacationAndSickLeaveLogs.push(log);
@@ -380,7 +380,7 @@ export const getWorkLogsByUserId = async (
         };
       }
 
-      projectsMap[projectId].totalHours += log.hours;
+      projectsMap[projectId].totalHours += log.hours.toNumber();
       projectsMap[projectId].logs.push(log);
     });
 
@@ -388,7 +388,7 @@ export const getWorkLogsByUserId = async (
 
     if (vacationAndSickLeaveLogs.length > 0) {
       const vacationSickLeaveHours = vacationAndSickLeaveLogs.reduce(
-        (sum, log) => sum + log.hours,
+        (sum, log) => sum + log.hours.toNumber(),
         0
       );
 
