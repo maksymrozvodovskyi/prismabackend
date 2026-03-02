@@ -23,31 +23,28 @@ router.get("/", [requireAuth], getListOfProjects);
 
 router.get(
   "/user/:userId",
-  [
-    requireAuth,
-    validate(getProjectsQuerySchema, "query"),
-  ],
-  getUserProjects
+  [requireAuth, validate(getProjectsQuerySchema, "query")],
+  getUserProjects,
 );
 
-router.get("/:projectId", requireAuth, getProjectById);
+router.get("/:projectId", [requireAuth], getProjectById);
 
 router.post(
   "/",
   [requireAuth, isAdmin, validate(createProjectSchema)],
-  createProject
+  createProject,
 );
 
 router.post(
   "/:projectId/users",
   [requireAuth, isAdmin, validate(addUserToProjectSchema)],
-  addUserToProject
+  addUserToProject,
 );
 
 router.put(
   "/:projectId",
   [requireAuth, isAdmin, validate(updateProjectSchema)],
-  updateProject
+  updateProject,
 );
 
 export default router;
