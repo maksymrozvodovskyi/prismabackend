@@ -10,6 +10,7 @@ import projectRoutes from "./routes/projects.routes";
 import workLogRoutes from "./routes/workLogs.routes";
 import feedbackRoutes from "./routes/feedback.routes";
 import reportRoutes from "./routes/reports.routes";
+import vacationsRoutes from "./routes/vacations.routes";
 
 export const app = express();
 
@@ -30,6 +31,7 @@ app.use("/projects", projectRoutes);
 app.use("/work-logs", workLogRoutes);
 app.use("/feedbacks", feedbackRoutes);
 app.use("/reports", reportRoutes);
+app.use("/vacations", vacationsRoutes);
 
 app.use(notFoundHandler);
 
